@@ -1,0 +1,27 @@
+Package: mzionShiny
+Title: Mzion App
+Version: 0.0.0.9000
+Authors@R: 
+    person("Qiang", "Zhang", , "qzhang503@gmail.com", role = c("aut", "cre"))
+Description: Shiny app of Mzion proteomics database search engine
+License: MIT + file LICENSE
+Imports: 
+    config (>= 0.3.1),
+    golem (>= 0.4.1),
+    mzion,
+    shiny (>= 1.7.4),
+    shinyFiles
+Suggests: 
+    knitr,
+    rmarkdown,
+    shinyFiles, 
+    spelling,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+LazyData: true
+RoxygenNote: 7.2.3
+VignetteBuilder: knitr
+Remotes:
+    qzhang503/mzion

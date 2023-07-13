@@ -1,0 +1,55 @@
+---
+title: "Mzion App"
+author:
+- name: Qiang Zhang
+date: "`r Sys.Date()`"
+always_allow_html: true
+output:
+  github_document:
+    toc: yes
+  md_document:
+    toc: yes
+    toc_depth: 4
+    variant: gfm
+  word_document:
+    toc: yes
+  html_document:
+    fig_caption: yes
+    highlight: haddock
+    keep_md: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    number_sections: true
+  html_vignette: 
+  vignette: >
+    %\VignetteIndexEntry{mzionShiny}
+    %\VignetteEncoding{UTF-8}`
+    %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  out.width='.40\\linewidth',
+  fig.width=3,
+  fig.height=3,
+  fig.show='hold',
+  fig.align='center',
+  comment = "#>"
+)
+```
+
+## Installation
+
+To install this package, start R and enter:
+
+```{r installation, include = TRUE, eval = FALSE}
+if (!requireNamespace("devtools", quietly = TRUE))
+    install.packages("devtools")
+devtools::install_github("qzhang503/mzionShiny")
+```
+
