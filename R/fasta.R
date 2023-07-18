@@ -5,13 +5,12 @@ fastaUI <- function(id)
 {
   tagList(
     fluidRow(
-      # shinyFilesButton(NS(id, "files"), "Select FASTA files", "Select Files", multiple = TRUE),
-
-      column(4, checkboxInput(NS(id, "use_ms1_cache"), "Use cache", value = TRUE)),
-      column(12, numericInput(NS(id, "n"), "Number of databases", 1, min = 1)),
-      uiOutput(NS(id, "dbs")),
-      # textOutput(NS(id, "fastas")),
+      column(3, checkboxInput(NS(id, "use_ms1_cache"), "Use cache", value = TRUE)),
     ),
+    fluidRow(
+      column(4, numericInput(NS(id, "n"), "Number of databases", 1, min = 1, max = 5)),
+    ),
+    uiOutput(NS(id, "dbs")),
   )
 }
 
@@ -26,59 +25,233 @@ fastaServer <- function(id,
   moduleServer(
     id,
     function(input, output, session) {
-      # roots <- getVolumes()
-      # shinyFileChoose(input, "files", roots = roots, filetypes = c("fasta", "fas"))
-      # files <- reactive(parseFilePaths(roots, input$files)[, "datapath", drop = TRUE])
-
+      btn_ids <- reactive(paste0("btn_", seq_len(input$n)))
       fas_ids <- reactive(paste0("fasta_", seq_len(input$n)))
       acc_ids <- reactive(paste0("acc_type_", seq_len(input$n)))
       pat_ids <- reactive(paste0("acc_pattern_", seq_len(input$n)))
       use_cuspat_ids <- reactive(paste0("use_custom_pat_", seq_len(input$n)))
 
       output$dbs <- renderUI({
-        mapply(function (x1, x2, x3, x4) {
-          n <- gsub(".*_(\\d+)$", "\\1", x1)
-          fluidRow(
-            column(6, textInput(NS(id, x1), paste("Database", n),
-                                value = isolate(input[[x1]]) %||% "",
-                                placeholder = "~/Mzion/DB/my.fasta")),
-            column(3, radioButtons(NS(id, x2), "Accession type", accessions)),
-            column(3, textInput(NS(id, x3), "Accession pattern (optional)",
-                                value = isolate(input[[x3]]) %||% "",
-                                placeholder = "Regular expression for \"other\"")),
-            # column(4, checkboxInput(NS(id, x4), "Custom accession")),
+        mapply(function (x0, x1, x2, x3, x4) {
+          idx <- gsub(".*_(\\d+)$", "\\1", x1)
+          fixedRow(
+            column(2, shinyFiles::shinyFilesButton(NS(id, x0), "Load FASTA", "Please select a file",
+                                                   filetype = list(text = "fasta"),
+                                                   multiple = FALSE, viewtype = "detail")),
+            column(10, fluidRow(
+              column(4, textInput(NS(id, x1), label = paste("Database", idx),
+                                  value = isolate(input[[x1]]) %||% "",
+                                  placeholder = "~/Mzion/DB/my.fasta")),
+              column(3, radioButtons(NS(id, x2), "Accession type", accessions)),
+              column(3, textInput(NS(id, x3), "Accession pattern (optional)",
+                                  value = isolate(input[[x3]]) %||% "",
+                                  placeholder = "Regular expression for \"other\"")),
+              # column(4, checkboxInput(NS(id, x4), "Custom accession")),
+            )),
           )
-        }, fas_ids(), acc_ids(), pat_ids(), use_cuspat_ids())
+        }, btn_ids(), fas_ids(), acc_ids(), pat_ids(), use_cuspat_ids())
       })
+
+      volumes <- c(Home = fs::path_home_r(), Home_win = fs::path_home(),
+                   "R Installation" = R.home(), shinyFiles::getVolumes()())
+
+      ###
+      shinyFiles::shinyFileChoose(input, "btn_1", roots = volumes, session = session)
+      text_1 <- reactive({
+        if (is.integer(input$btn_1)) {
+          NULL
+        } else {
+          fileinfo <- shinyFiles::parseFilePaths(volumes, input$btn_1)
+          fileinfo <- gsub("\\\\", "/", unname(fileinfo[["datapath"]]))
+        }
+      })
+      observeEvent(input$btn_1, {
+        updateTextInput(session, "fasta_1", NULL, value = text_1())
+      })
+
+      shinyFiles::shinyFileChoose(input, "btn_2", roots = volumes, session = session)
+      text_2 <- reactive({
+        if (is.integer(input$btn_2)) {
+          NULL
+        } else {
+          fileinfo <- shinyFiles::parseFilePaths(volumes, input$btn_2)
+          fileinfo <- gsub("\\\\", "/", unname(fileinfo[["datapath"]]))
+        }
+      })
+      observeEvent(input$btn_2, {
+        updateTextInput(session, "fasta_2", NULL, value = text_2())
+      })
+
+      shinyFiles::shinyFileChoose(input, "btn_3", roots = volumes, session = session)
+      text_3 <- reactive({
+        if (is.integer(input$btn_3)) {
+          NULL
+        } else {
+          fileinfo <- shinyFiles::parseFilePaths(volumes, input$btn_3)
+          fileinfo <- gsub("\\\\", "/", unname(fileinfo[["datapath"]]))
+        }
+      })
+      observeEvent(input$btn_3, {
+        updateTextInput(session, "fasta_3", NULL, value = text_3())
+      })
+
+      shinyFiles::shinyFileChoose(input, "btn_4", roots = volumes, session = session)
+      text_4 <- reactive({
+        if (is.integer(input$btn_4)) {
+          NULL
+        } else {
+          fileinfo <- shinyFiles::parseFilePaths(volumes, input$btn_4)
+          fileinfo <- gsub("\\\\", "/", unname(fileinfo[["datapath"]]))
+        }
+      })
+      observeEvent(input$btn_4, {
+        updateTextInput(session, "fasta_4", NULL, value = text_4())
+      })
+
+      shinyFiles::shinyFileChoose(input, "btn_5", roots = volumes, session = session)
+      text_5 <- reactive({
+        if (is.integer(input$btn_5)) {
+          NULL
+        } else {
+          fileinfo <- shinyFiles::parseFilePaths(volumes, input$btn_5)
+          fileinfo <- gsub("\\\\", "/", unname(fileinfo[["datapath"]]))
+        }
+      })
+      observeEvent(input$btn_5, {
+        updateTextInput(session, "fasta_5", NULL, value = text_5())
+      })
+      ###
 
       fastas <- reactive({
         ans <- unlist(lapply(fas_ids(), function (x) input[[x]] %||% ""))
-        # ans[ans == ""] <- NULL
-        ans
+        ans <- ans[ans != ""]
       })
-      # output$fastas <- renderPrint({ fastas() })
-
       acc_types <- reactive({
         ans <- unlist(lapply(acc_ids(), function (x) input[[x]] %||% ""))
-        # ans[ans == ""] <- NULL
-        ans
+        ans <- ans[ans != ""]
       })
-
       acc_patterns <- reactive({
         ans <- unlist(lapply(pat_ids(), function (x) input[[x]] %||% ""))
-        # ans[ans == ""] <- NULL
-        ans
+        ans <- ans <- ans[ans != ""]
       })
 
       use_ms1_cache <- reactive(input$use_ms1_cache)
 
-      list(# files = files,
-           fasta = fastas,
+      list(fasta = fastas,
+           acc_type = acc_types,
+           acc_pattern = acc_patterns,
+           use_ms1_cache = use_ms1_cache,
+           n = reactive(input$n))
+    }
+  )
+}
+
+
+
+#' User interface of FASTA parameters
+#'
+#' @param id Namespace identifier.
+#' @param accessions Protein accession types.
+fastaUI0 <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_acc", "other"))
+{
+  ns <- NS(id)
+
+  tagList(
+    fluidRow(
+      column(4, checkboxInput(NS(id, "use_ms1_cache"), "Use cache", value = TRUE)),
+    ),
+
+    fluidRow(
+      shinyFiles::shinyFilesButton(NS(id, "select_1"), "Select a FASTA file", "Select Files", multiple = FALSE),
+      textInput(NS(id, "fasta_1"), "Database 1", value = "", placeholder = file.path("~/Mzion/DB/db1.fasta")),
+      radioButtons(NS(id, "acc_type_1"), "Accession type 1", accessions),
+      checkboxInput(NS(id, "custom_accpat_1"), "Custom accession 1"),
+      conditionalPanel(
+        condition = "input.custom_accpat_1 == true",
+        ns = ns,
+        column(4, textInput(NS(id, "acc_pattern_1"), "Accession pattern 1"), NULL)
+      ),
+    ),
+    fluidRow(
+      shinyFiles::shinyFilesButton(NS(id, "select_2"), "Select a FASTA file", "Select Files", multiple = FALSE),
+      textInput(NS(id, "fasta_2"), "Database 2", value = "", placeholder = file.path("~/Mzion/DB/db2.fasta")),
+      radioButtons(NS(id, "acc_type_2"), "Accession type 2", accessions),
+      checkboxInput(NS(id, "custom_accpat_2"), "Custom accession 2"),
+      conditionalPanel(
+        condition = "input.custom_accpat_2 == true",
+        ns = ns,
+        column(4, textInput(NS(id, "acc_pattern_2"), "Accession pattern 2"), NULL)
+      ),
+    ),
+    fluidRow(
+      shinyFiles::shinyFilesButton(NS(id, "select_3"), "Select a FASTA file", "Select Files", multiple = FALSE),
+      textInput(NS(id, "fasta_3"), "Database 3", value = "", placeholder = file.path("~/Mzion/DB/db3.fasta")),
+      radioButtons(NS(id, "acc_type_3"), "Accession type 3", accessions),
+      checkboxInput(NS(id, "custom_accpat_3"), "Custom accession 3"),
+      conditionalPanel(
+        condition = "input.custom_accpat_3 == true",
+        ns = ns,
+        column(4, textInput(NS(id, "acc_pattern_3"), "Accession pattern 3"), NULL)
+      ),
+    ),
+    fluidRow(
+      shinyFiles::shinyFilesButton(NS(id, "select_4"), "Select a FASTA file", "Select Files", multiple = FALSE),
+      textInput(NS(id, "fasta_4"), "Database 4", value = "", placeholder = file.path("~/Mzion/DB/db4.fasta")),
+      radioButtons(NS(id, "acc_type_4"), "Accession type 4", accessions),
+      checkboxInput(NS(id, "custom_accpat_4"), "Custom accession 4"),
+      conditionalPanel(
+        condition = "input.custom_accpat_4 == true",
+        ns = ns,
+        column(4, textInput(NS(id, "acc_pattern_4"), "Accession pattern 4"), NULL)
+      ),
+    ),
+  )
+}
+
+
+#' Server-side processing of FASTA parameters
+#'
+#' @param id Namespace identifier.
+#' @param accessions Accession types.
+fastaServer0 <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_acc", "other"))
+{
+  moduleServer(
+    id,
+    function(input, output, session) {
+      ns <- session$ns
+      volumes <- c(Home = fs::path_home_r(), Home_win = fs::path_home(), shinyFiles::getVolumes()())
+
+      shinyFiles::shinyFileChoose(input, "select_1", roots = volumes, filetypes = c("fasta", "fas"))
+      fasta_1 <- reactive(unname(shinyFiles::parseFilePaths(volumes, input$select_1)[, "datapath", drop = TRUE]))
+      observeEvent(input$select_1, { updateTextInput(session, "fasta_1", NULL, value = fasta_1()) })
+
+      shinyFiles::shinyFileChoose(input, "select_2", roots = volumes, filetypes = c("fasta", "fas"))
+      fasta_2 <- reactive(unname(shinyFiles::parseFilePaths(volumes, input$select_2)[, "datapath", drop = TRUE]))
+      observeEvent(input$select_2, { updateTextInput(session, "fasta_2", NULL, value = fasta_2()) })
+
+      shinyFiles::shinyFileChoose(input, "select_3", roots = volumes, filetypes = c("fasta", "fas"))
+      fasta_3 <- reactive(unname(shinyFiles::parseFilePaths(volumes, input$select_3)[, "datapath", drop = TRUE]))
+      observeEvent(input$select_3, { updateTextInput(session, "fasta_3", NULL, value = fasta_3()) })
+
+      shinyFiles::shinyFileChoose(input, "select_4", roots = volumes, filetypes = c("fasta", "fas"))
+      fasta_4 <- reactive(unname(shinyFiles::parseFilePaths(volumes, input$select_4)[, "datapath", drop = TRUE]))
+      observeEvent(input$select_4, { updateTextInput(session, "fasta_4", NULL, value = fasta_4()) })
+
+      fas_ids <- reactive(paste0("fasta_", 1:4))
+      acc_ids <- reactive(paste0("acc_type_", 1:4))
+      pat_ids <- reactive(paste0("acc_pattern_", 1:4))
+      use_cuspat_ids <- reactive(paste0("use_custom_pat_", 1:4))
+
+      fastas <- reactive({ unlist(lapply(fas_ids(), function (x) input[[x]] %||% "")) })
+      acc_types <- reactive({ unlist(lapply(acc_ids(), function (x) input[[x]] %||% "")) })
+      acc_patterns <- reactive({ unlist(lapply(pat_ids(), function (x) input[[x]] %||% "")) })
+      use_ms1_cache <- reactive(input$use_ms1_cache)
+
+      list(fasta = fastas,
            acc_type = acc_types,
            acc_pattern = acc_patterns,
            use_ms1_cache = use_ms1_cache)
     }
   )
 }
-
 

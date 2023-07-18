@@ -6,11 +6,14 @@ mgfUI <- function(id)
   ns <- NS(id)
 
   tagList(
-    textInput(NS(id, "out_path"), "Output path", value = "",
-              placeholder = file.path("~/Mzion/My_Project")),
-    textInput(NS(id, "mgf_path"), "MGF path", value = "",
-              placeholder = "~/Mzion/My_project/mgf"),
-    textInput(NS(id, ".path_cache"), "Default cache folder", value = "~/mzion/.MSearches (1.3.0)/Cache/Calls"),
+    fluidRow(
+      column(4, shinyFiles::shinyDirButton(NS(id, "select_outpath"), "Output path", "Please select a folder")),
+      column(12, textInput(NS(id, "out_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project"))),
+      column(4, shinyFiles::shinyDirButton(NS(id, "select_mgfpath"), "MGF path", "Please select a folder")),
+      column(12, textInput(NS(id, "mgf_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project/mgf"))),
+      column(4, shinyFiles::shinyDirButton(NS(id, "select_cachepath"), "Cache folder", "Please select a folder")),
+      column(12, textInput(NS(id, ".path_cache"), label = NULL, value = "~/mzion/.MSearches (1.3.0)/Cache/Calls")),
+    ),
     fluidRow(
       column(4, numericInput(NS(id, "min_ms1_charge"), "Min MS1 charge state", 2)),
       column(4, numericInput(NS(id, "max_ms1_charge"), "Max MS1 charge state", 6)),
@@ -49,11 +52,60 @@ mgfServer <- function(id)
   moduleServer(
     id,
     function(input, output, session) {
+      volumes <- c(Home = fs::path_home_r(), Home_win = fs::path_home(), shinyFiles::getVolumes()())
+
+      # Output path
+      shinyFiles::shinyDirChoose(input, "select_outpath", roots = volumes, session = session,
+                                 restrictions = system.file(package = "base"), allowDirCreate = FALSE)
+      out_path <- reactive({
+        if (is.integer(input$select_outpath)) {
+          NULL
+        } else {
+          fileinfo <- shinyFiles::parseDirPath(volumes, input$select_outpath)
+          fileinfo <- gsub("\\\\", "/", fileinfo)
+        }
+      })
+
+      observeEvent(input$select_outpath, {
+        updateTextInput(session = session, inputId = "out_path", label = NULL, value = out_path())
+      })
+
+      # MGF path
+      shinyFiles::shinyDirChoose(input, "select_mgfpath", roots = volumes, session = session,
+                                 restrictions = system.file(package = "base"), allowDirCreate = FALSE)
+      mgf_path <- reactive({
+        if (is.integer(input$select_mgfpath))
+          NULL
+        else
+          gsub("\\\\", "/", shinyFiles::parseDirPath(volumes, input$select_mgfpath))
+      })
+
+      observeEvent(input$select_mgfpath, {
+        updateTextInput(session = session, inputId = "mgf_path", label = NULL, value = mgf_path())
+      })
+
+      # Cache folder
+      shinyFiles::shinyDirChoose(input, "select_cachepath", roots = volumes, session = session,
+                                 restrictions = system.file(package = "base"), allowDirCreate = FALSE)
+      .path_cache <- reactive({
+        if (is.integer(input$select_cachepath))
+          NULL
+        else
+          gsub("\\\\", "/", shinyFiles::parseDirPath(volumes, input$select_cachepath))
+      })
+
+      observeEvent(input$select_cachepath, {
+        updateTextInput(session = session, inputId = ".path_cache", label = NULL, value = .path_cache())
+      })
+
+
       observeEvent(input$reset, {
-        updateTextInput(session, "out_path", "Output path", value = "",
+        updateTextInput(session, "out_path", label = NULL, value = "~",
                         placeholder = file.path("~/Mzion/My_Project"))
-        updateTextInput(session, "mgf_path", "MGF path", value = "",
+        updateTextInput(session, "mgf_path", label = NULL, value = "~",
                         placeholder = "~/Mzion/My_project/mgf")
+        updateTextInput(session, ".path_cache", "Cache folder",
+                        value = "~/mzion/.MSearches (1.3.0)/Cache/Calls")
         updateNumericInput(session, "min_ms1_charge", "Min MS1 charge state", 2)
         updateNumericInput(session, "max_ms1_charge", "Max MS1 charge state", 6)
         updateNumericInput(session, "min_ms2mass", "Min MS2 mass", 115)
@@ -84,6 +136,7 @@ mgfServer <- function(id)
            exclude_reporter_region = reactive(input$exclude_reporter_region),
            calib_ms1mass = reactive(input$calib_ms1mass),
            ppm_ms1calib = reactive(input$ppm_ms1calib),
+           cut_ms2ions = reactive(input$cut_ms2ions),
            topn_ms2ion_cuts = reactive(input$topn_ms2ion_cuts),
            .path_cache = reactive(input$.path_cache),
            out_path = reactive(input$out_path)

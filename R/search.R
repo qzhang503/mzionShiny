@@ -30,7 +30,7 @@ searchUI <- function(id)
     ),
     selectInput(NS(id, "type_ms2ions"), "MS2 fragments", c("by", "ax", "cz"), selected = "by"),
     selectInput(NS(id, "enzyme"), "Enzyme", enzymes, selected = "Trypsin_P"),
-    uiOutput(NS(id, "noenzyme")),
+    uiOutput(NS(id, "nes")),
     checkboxInput(NS(id, "customenzyme"), "Custom enzyme"),
     conditionalPanel(
       condition = "input.customenzyme == true",
@@ -82,7 +82,7 @@ searchServer <- function(id)
       enzyme <- reactive(input$enzyme)
       observe({
         if (enzyme() == "Noenzyme") {
-          output$noenzyme <- renderUI({
+          output$nes <- renderUI({
             fluidRow(
               column(8, numericInput(NS(id, "noenzyme_maxn"),
                                      paste0("Max number of peptide lengths for a section ",

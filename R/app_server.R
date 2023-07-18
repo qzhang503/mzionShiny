@@ -18,6 +18,7 @@ app_server <- function(input, output, session)
 {
   ## FASTA
   res_fasta <- fastaServer("fasta")
+
   fasta <- res_fasta$fasta
   acc_type <- res_fasta$acc_type
   acc_pattern <- res_fasta$acc_pattern
@@ -27,11 +28,6 @@ app_server <- function(input, output, session)
   # output$acc_type <- renderPrint({ paste0("acc_type: ", acc_type()) })
   # output$acc_pattern <- renderPrint({ paste0("acc_pattern: ", acc_pattern()) })
   # output$use_ms1_cache <- renderPrint({ paste0("use_ms1_cache: ", use_ms1_cache()) })
-
-  ###
-  # files <- res_fasta$files
-  # output$files <- renderTable(files())
-  ###
 
   ## modifications
   mods <- modServer("mod")
@@ -48,6 +44,10 @@ app_server <- function(input, output, session)
   # val_mod_motifs <- mods$val_mod_motifs
   fixedlabs <- mods$fixedlabs
   varlabs <- mods$varlabs
+  use_short_mods <- mods$use_short_mods # for re-loading
+  use_ms1notches = mods$use_ms1notches
+  use_ms1neulosses = mods$use_ms1neulosses
+  isolabs = mods$isolabs
 
   # output$fixedmods <- renderPrint(paste0("fixedmods: ", c(fixedmods()) ))
   # output$varmods <- renderPrint(paste0("varmods: ", c(varmods()) ))
@@ -62,9 +62,6 @@ app_server <- function(input, output, session)
   # output$varlabs <- renderPrint(paste0("varlabs: ", c(varlabs()) ))
   # output$nm_mod_motifs <- renderPrint(paste0("nm_mod_motifs: ", nm_mod_motifs() )) # single value currently
   # output$val_mod_motifs <- renderPrint(paste0("val_mod_motifs: ", c(val_mod_motifs()) ))
-
-  n_13c_new <- reactive(seq(n_13c()[1], n_13c()[2]))
-  ms1_notches_num <- reactive(extract_nums(ms1_notches()))
   # output$mod_motifs <- renderText({
   #   vals <- mods$val_mod_motifs
   #   names(vals) <- mods$nm_mod_motifs
@@ -88,11 +85,8 @@ app_server <- function(input, output, session)
   exclude_reporter_region <- mgfs$exclude_reporter_region
   calib_ms1mass <- mgfs$calib_ms1mass
   ppm_ms1calib <- mgfs$ppm_ms1calib
+  cut_ms2ions <- mgfs$cut_ms2ions
   topn_ms2ion_cuts <- mgfs$topn_ms2ion_cuts
-
-  max_scan_num_new <- reactive({ if (is.na(max_scan_num())) Inf else max_scan_num() })
-  max_ret_time_new <- reactive({ if (is.na(max_ret_time())) Inf else max_ret_time() })
-  topn_ms2ion_cuts_new <- reactive({ if (topn_ms2ion_cuts() == "") NA else topn_ms2ion_cuts() })
 
   # output$out_path <- renderPrint(paste0("out_path: ", out_path() ))
   # output$mgf_path <- renderPrint(paste0("mgf_path: ", mgf_path() ))
@@ -169,8 +163,6 @@ app_server <- function(input, output, session)
   topn_seqs_per_query <- fdrs$topn_seqs_per_query
   svm_reproc <- fdrs$svm_reproc
 
-  max_protscores_co_new <- reactive({ if (is.na(max_protscores_co())) Inf else max_protscores_co() })
-
   # output$target_fdr <- renderPrint(paste0("target_fdr: ", target_fdr() ))
   # output$fdr_type <- renderPrint(paste0("fdr_type: ", fdr_type() ))
   # output$max_pepscores_co <- renderPrint(paste0("max_pepscores_co: ", max_pepscores_co() ))
@@ -195,17 +187,16 @@ app_server <- function(input, output, session)
   # output$tmt_reporter_lower <- renderPrint(paste0("tmt_reporter_lower: ", tmt_reporter_lower() ))
   # output$tmt_reporter_upper <- renderPrint(paste0("tmt_reporter_upper: ", tmt_reporter_upper() ))
 
-  ## Foo
-  # outpath_Server("db")
+  # may be converted in matchMS
+  max_protscores_co_new <- reactive({ if (is.na(max_protscores_co())) Inf else max_protscores_co() })
+  max_scan_num_new <- reactive({ if (is.na(max_scan_num())) Inf else max_scan_num() })
+  max_ret_time_new <- reactive({ if (is.na(max_ret_time())) Inf else max_ret_time() })
+  topn_ms2ion_cuts_new <- reactive({ if (topn_ms2ion_cuts() == "") NA else topn_ms2ion_cuts() })
+  n_13c_new <- reactive(seq(n_13c()[1], n_13c()[length(n_13c())]))
+  ms1_notches_num <- reactive(extract_nums(ms1_notches()))
 
-  ## Bookmarking
-  # https://cran.r-project.org/web/packages/shinyjqui/vignettes/save-and-restore.html
-
-  df <- eventReactive(input$submit, {
-    updateActionButton(session, "submit", "Running", icon = icon("redo"))
-    # saveRDS(pars, file.path(out_path(), "Calls", "shinypar.rds"))
-
-    mzion::matchMS(
+  pars <- reactive({
+    list(
       out_path = out_path(),
       mgf_path = mgf_path(),
       fasta = fasta(),
@@ -285,7 +276,7 @@ app_server <- function(input, output, session)
       # add_ms2moverzs = FALSE,
       # add_ms2ints = FALSE,
 
-      svm_reproc = svm_reproc(),
+      svm_reproc = svm_reproc()
       # svm_kernel = "radial",
       # svm_feats = c("pep_score", "pep_ret_range", "pep_delta", "pep_n_ms2",
       #               "pep_expect", "pep_exp_mz", "pep_exp_mr", "pep_tot_int",
@@ -299,14 +290,245 @@ app_server <- function(input, output, session)
       # by_modules = TRUE,
       # digits = 4L,
     )
-
-
-
-    # updateActionButton(session, "submit", label = "Submit")
   })
 
-  observeEvent(df(), {
-    output$df <- if (is.data.frame(df())) renderTable(df()) else renderText(df())
+  ## Save or reload
+  volumes <- reactive(c(Project = out_path(), Home = fs::path_home_r(),
+                        Home_win = fs::path_home(), shinyFiles::getVolumes()()))
+
+  observeEvent(input$savepars, {
+    # back to Shiny formats
+    pars0 <- pars()
+    pars0[["n_13c"]] <- n_13c()
+    pars0[["topn_ms2ion_cuts"]] <- topn_ms2ion_cuts()
+    pars0[["max_protscores_co"]] <- max_protscores_co()
+    pars0[["max_scan_num"]] <- max_scan_num()
+    pars0[["max_ret_time"]] <- max_ret_time()
+
+    if (out_path() == "") {
+      print("Set up working direcotry first")
+    }
+    else {
+      shinyFiles::shinyFileSave(input, "savepars", roots = volumes(), session = session,
+                                restrictions = system.file(package = "base"))
+      fileinfo <- shinyFiles::parseSavePath(volumes(), input$savepars)
+
+      # file selected
+      if (nrow(fileinfo))
+        saveRDS(pars0, fileinfo$datapath)
+    }
+  })
+
+  use_cached_pars <- reactiveVal(FALSE)
+  cached_pars <- eventReactive(input$loadpars, {
+    shinyFiles::shinyFileChoose(input, "loadpars", roots = volumes, session = session)
+    fileinfo <- shinyFiles::parseFilePaths(volumes(), input$loadpars)
+
+    if (nrow(fileinfo)) {
+      use_cached_pars(TRUE)
+      readRDS(fileinfo$datapath)
+    }
+    else
+      NULL
+  })
+
+  # why need to load parameter file twice to update the FASTA field?
+  observeEvent(cached_pars(), {
+    if (!is.null(cached_pars())) {
+      ## FASTA
+      cache_fas <- cached_pars()$fasta
+      cache_acctypes <- cached_pars()$acc_type
+      cache_accpats <- cached_pars()$acc_pattern
+      if (!length(cache_accpats)) cache_accpats <- vector("list", length(cache_fas))
+
+      updateCheckboxInput(session, NS("fasta", "use_ms1_cache"), "Use cache",
+                          value = cached_pars()$use_ms1_cache)
+      updateNumericInput(session, NS("fasta", "n"), "Number of databases",
+                         value = length(cache_fas))
+
+      faseqs <- seq_along(cache_fas)
+      fas_ids <- paste0("fasta_", faseqs)
+      acc_ids <- paste0("acc_type_", faseqs)
+      pat_ids <- paste0("acc_pattern_", faseqs)
+      # use_cuspat_ids <- paste0("use_custom_pat_", faseqs)
+
+      accessions <- c("uniprot_acc", "uniprot_id", "refseq_acc", "other")
+
+      for (i in faseqs) {
+        updateTextInput(session, NS("fasta", fas_ids[[i]]), paste("Database", i), value = cache_fas[[i]])
+        updateRadioButtons(session, NS("fasta", acc_ids[[i]]), "Accession type",
+                           accessions, selected = cache_acctypes[[i]])
+        updateTextInput(session, NS("fasta", pat_ids[[i]]), "Accession pattern (optional)",
+                        value = cache_accpats[[i]], placeholder = "Regular expression for \"other\"")
+      }
+
+      # output$cached_fasta <- renderPrint({ paste0("Cached FASTAs: ", cache_fas) })
+      # output$cached_acctype <- renderPrint({ paste0("Cached accession types: ", cache_acctypes) })
+      # output$cached_accpat <- renderPrint({ paste0("Cached accession patterns: ", cache_accpats) })
+
+      ## MGF
+      # if out_path changed -> cached_pars not found...
+      updateTextInput(session, NS("mgf", "out_path"), "Output path", value = cached_pars()$out_path,
+                      placeholder = file.path("~/Mzion/My_Project"))
+      updateTextInput(session, NS("mgf", "mgf_path"), "MGF path", value = cached_pars()$mgf_path,
+                      placeholder = "~/Mzion/My_project/mgf")
+      updateTextInput(session, NS("mgf", ".path_cache"), "Default cache folder",
+                      value = cached_pars()$.path_cache)
+      updateNumericInput(session, NS("mgf", "min_ms1_charge"), "Min MS1 charge state",
+                         value = cached_pars()$min_ms1_charge)
+      updateNumericInput(session, NS("mgf", "max_ms1_charge"), "Max MS1 charge state",
+                         value = cached_pars()$max_ms1_charge)
+      updateNumericInput(session, NS("mgf", "min_ms2mass"), "Min MS2 mass", value = cached_pars()$min_ms2mass)
+      updateNumericInput(session, NS("mgf", "max_ms2mass"), "Max MS2 mass", value = cached_pars()$max_ms2mass)
+      updateNumericInput(session, NS("mgf", "min_scan_num"), "Min scan number", value = cached_pars()$min_scan_num)
+      updateNumericInput(session, NS("mgf", "max_scan_num"), "Max scan number", value = cached_pars()$max_scan_num)
+      updateNumericInput(session, NS("mgf", "min_ret_time"), "Min retention time", value = cached_pars()$min_ret_time)
+      updateNumericInput(session, NS("mgf", "max_ret_time"), "Max retention time", value = cached_pars()$max_ret_time)
+      updateNumericInput(session, NS("mgf", "topn_ms2ions"), "Top-N features", value = cached_pars()$topn_ms2ions)
+      updateCheckboxInput(session, NS("mgf", "exclude_reporter_region"), "Exclude reporter region",
+                          value = cached_pars()$exclude_reporter_region)
+      updateCheckboxInput(session, NS("mgf", "calib_ms1mass"), "Mass calibration", value = cached_pars()$calib_ms1mass)
+      updateNumericInput(session, NS("mgf", "ppm_ms1calib"), "Calibration mass tolerance (ppm)",
+                         value = cached_pars()$ppm_ms1calib)
+      updateCheckboxInput(session, NS("mgf", "cut_ms2ions"), "Cut MS2 by regions", cached_pars()$cut_ms2ions)
+      updateTextInput(session, NS("mgf", "topn_ms2ion_cuts"), "Cuts (m/z = percent)",
+                      value = cached_pars()$topn_ms2ion_cuts,
+                      placeholder = "`1000` = 90, `1100` = 5, `4500` = 5")
+
+      ## mod
+      choices <- if (use_short_mods()) short_mods else umods$modification
+      updateCheckboxInput(session, NS("mod", "use_short_mods"), "Short list",
+                          value = cached_pars()$use_short_mods)
+      updateSelectInput(session, NS("mod", "fixedmods"), "Fixed modifications",
+                        choices, selected = cached_pars()$fixedmods)
+      updateSelectInput(session, NS("mod", "varmods"), "Variable modifications",
+                        choices, selected = cached_pars()$varmods)
+      updateSelectInput(session, NS("mod", "locmods"), "Localizations",
+                        choices, selected = cached_pars()$locmods)
+      updateSliderInput(session, NS("mod", "n_13c"), "Numbers of 13C",
+                        value = cached_pars()$n_13c, min = -1, max = 3)
+      updateCheckboxInput(session, NS("mod", "rm_dup_term_anywhere"),
+                          paste0("Remove the same-site combinations at both terminal and anywhere positions ",
+                                 "(e.g., N-term Q and Anywhere Q)"),
+                          value = cached_pars()$rm_dup_term_anywhere)
+      # cached_pars()$use_ms1notches, use_ms1neulosses and isolabs are NULL
+      updateCheckboxInput(session, NS("mod", "use_ms1notches"), "Precursor off-sets",
+                          value = cached_pars()$use_ms1notches)
+      updateCheckboxInput(session, NS("mod", "use_ms1neulosses"), "Precursor neutral losses",
+                          value = cached_pars()$use_ms1neulosses)
+      updateCheckboxInput(session, NS("mod", "isolabs"), "Isotope labels", value = cached_pars()$isolabs)
+      #
+      updateCheckboxInput(session, NS("mod", "pepmotifs"), "Peptide motifs", value = cached_pars()$pepmotifs)
+      updateTextInput(session, NS("mod", "ms1_notches"), "Values", value = cached_pars()$ms1_notches,
+                      placeholder = "-97.976896, -79.96633")
+      updateNumericInput(session, NS("mod", "maxn_neulosses_fnl"), "Max fixed NLs",
+                         value = cached_pars()$maxn_neulosses_fnl, min = 1)
+      updateNumericInput(session, NS("mod", "maxn_neulosses_vnl"), "Max variable NLs",
+                         value = cached_pars()$maxn_neulosses_vnl, min = 1)
+      updateSelectInput(session, NS("mod", "ms1_neulosses"), "Values",
+                        choices, selected = cached_pars()$ms1_neulosses)
+      updateSelectInput(session, NS("mod", "fixedlabs"), "Fixed labels",
+                        umods_labs$modification, selected = cached_pars()$fixedlabs)
+      updateSelectInput(session, NS("mod", "varlabs"), "Variable labels",
+                        umods_labs$modification, selected = cached_pars()$varlabs)
+
+      ## search
+      updateNumericInput(session, NS("search", "min_len"), "Min peptide length",
+                         value = cached_pars()$min_len, min = 1)
+      updateNumericInput(session, NS("search", "max_len"), "Max peptide length",
+                         value = cached_pars()$max_len, min = 1)
+      updateNumericInput(session, NS("search", "max_miss"), "Max mis-cleavages",
+                         value = cached_pars()$max_miss, min = 0)
+      updateNumericInput(session, NS("search", "min_mass"), "Min precursor mass",
+                         value = cached_pars()$min_mass, min = 1)
+      updateNumericInput(session, NS("search", "max_mass"), "Max precursor mass",
+                         value = cached_pars()$max_mass, min = 500)
+      updateNumericInput(session, NS("search", "ppm_ms1"), "MS1 tolerance (ppm)",
+                         value = cached_pars()$ppm_ms1, min = 1)
+      updateNumericInput(session, NS("search", "maxn_vmods_setscombi"), "Max combinations in modification sets",
+                         value = cached_pars()$maxn_vmods_setscombi, min = 1)
+      updateNumericInput(session, NS("search", "maxn_vmods_per_pep"), "Max variable modifications",
+                         value = cached_pars()$maxn_vmods_per_pep, min = 1)
+      updateNumericInput(session, NS("search", "maxn_sites_per_vmod"), "Max variable modifications per site",
+                         value = cached_pars()$maxn_sites_per_vmod, min = 1)
+      updateNumericInput(session, NS("search", "maxn_vmods_sitescombi_per_pep"), "Max position permutations",
+                         value = cached_pars()$maxn_vmods_sitescombi_per_pep, min = 1)
+      updateNumericInput(session, NS("search", "maxn_fnl_per_seq"), "Max neutral losses (fixed)",
+                         value = cached_pars()$maxn_fnl_per_seq, min = 1)
+      updateNumericInput(session, NS("search", "maxn_vnl_per_seq"), "Max neutral losses (variable)",
+                         value = cached_pars()$maxn_vnl_per_seq, min = 1)
+      updateNumericInput(session, NS("search", "min_ms2mass"), "Min MS2 mass", value = cached_pars()$min_ms2mass)
+      updateNumericInput(session, NS("search", "max_ms2mass"), "Max MS2 mass", value = cached_pars()$max_ms2mass)
+      updateNumericInput(session, NS("search", "ppm_ms2"), "MS2 tolerance (ppm)", value = cached_pars()$ppm_ms2)
+      updateNumericInput(session, NS("search", "minn_ms2"), "Min MS2 features", value = cached_pars()$minn_ms2)
+      updateSelectInput(session, NS("search", "type_ms2ions"), "MS2 fragments",
+                        c("by", "ax", "cz"), selected = cached_pars()$type_ms2ions)
+      updateSelectInput(session, NS("search", "enzyme"), "Enzyme", enzymes, selected = cached_pars()$enzyme)
+      updateCheckboxInput(session, NS("search", "customenzyme"), "Custom enzyme", value = cached_pars()$customenzyme)
+      # no update?
+      updateNumericInput(session, NS("search", "noenzyme_maxn"),
+                         paste0("Max number of peptide lengths for a section ",
+                                "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
+                         value = cached_pars()$noenzyme_maxn)
+      updateTextInput(session, NS("search", "custom_enzyme"), "Specificity (in regular expression)",
+                      value = cached_pars()$custom_enzyme, placeholder = "Cterm = NULL, Nterm = NULL")
+
+      ## FDR
+      updateNumericInput(session, NS("fdr", "target_fdr"), "Target FDR", value = cached_pars()$target_fdr, min = 1E-10)
+      updateSelectInput(session,  NS("fdr", "fdr_type"), "FDR type", choices = c("protein", "peptide", "psm"),
+                        selected = cached_pars()$fdr_type)
+      updateNumericInput(session, NS("fdr", "max_pepscores_co"), "Score threshold to warrent a PSM significance",
+                         value = cached_pars()$max_pepscores_co, min = 0)
+      updateNumericInput(session, NS("fdr", "min_pepscores_co"), "Score threshold to discard a PSM significance",
+                         value = cached_pars()$min_pepscores_co, min = 0)
+      updateNumericInput(session, NS("fdr", "max_protscores_co"), "Upper limit in protein score cut-offs",
+                         value = cached_pars()$max_protscores_co, min = 0)
+      updateNumericInput(session, NS("fdr", "max_protnpep_co"), "Max number of peptides to warrant a protein significance",
+                         value = cached_pars()$max_protnpep_co, min = 1)
+      updateSelectInput(session, NS("fdr", "fdr_group"), "FDR group", fdr_groups,
+                        selected = cached_pars()$fdr_group)
+      updateSelectInput(session, NS("fdr", "nes_fdr_group"), "FDR group (NES)", nes_fdr_groups,
+                        selected = cached_pars()$nes_fdr_group)
+      updateNumericInput(session, NS("fdr", "topn_mods_per_seq"), "Top-N matches per sequence",
+                         value = cached_pars()$topn_mods_per_seq, min = 1)
+      updateNumericInput(session, NS("fdr", "topn_seqs_per_query"), "Top-N sequences per query",
+                         value = cached_pars()$topn_seqs_per_query, min = 1)
+      updateCheckboxInput(session, NS("fdr", "svm_reproc"), "Percolator", value = cached_pars()$svm_reproc)
+
+      ## quantitation
+      updateSelectInput(session, NS("quant", "quant"), "Quantitation",
+                        choices = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt18"),
+                        selected = cached_pars()$quant)
+      updateNumericInput(session, NS("quant", "ppm_reporters"), "Reporter tolerance (ppm)",
+                         value = cached_pars()$ppm_reporters, min = 1)
+      updateNumericInput(session, NS("quant", "tmt_reporter_lower"), "Reporter lower bound",
+                         value = cached_pars()$tmt_reporter_lower, min = 0)
+      updateNumericInput(session, NS("quant", "tmt_reporter_upper"), "Reporter upper bound",
+                         value = cached_pars()$tmt_reporter_upper, min = 0)
+    }
+  })
+
+  ## Bookmarking
+  btn_submit <- eventReactive(input$submit, {
+    shinyjs::toggleState("submit")
+
+    sink(file.path(out_path(), "mzpars.txt"))
+    print(pars())
+    sink()
+
+    if (use_cached_pars()) {
+      do.call(mzion::matchMS, cached_pars())
+    }
+    else {
+      do.call(mzion::matchMS, pars())
+    }
+
+    shinyjs::toggleState("submit")
+  })
+  observe(btn_submit()) # trigger eventReactive
+
+  btn_cancel <- observeEvent(input$cancel, ignoreInit = TRUE, {
+    stop("Process interrupted.", call. = FALSE)
   })
 
   # modelDialog() before empty folder...

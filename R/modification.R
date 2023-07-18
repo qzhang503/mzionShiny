@@ -21,7 +21,6 @@ modUI <- function(id)
     column(4, checkboxInput(NS(id, "rm_dup_term_anywhere"),
                             paste0("Remove the same-site combinations at both terminal and anywhere positions ",
                                    "(e.g., N-term Q and Anywhere Q)"), value = TRUE)),
-
     checkboxInput(ns("use_ms1notches"), "Precursor off-sets"),
     conditionalPanel(
       condition = "input.use_ms1notches == true",
@@ -134,7 +133,7 @@ modServer <- function(id)
            varmods = reactive(input$varmods),
            locmods = reactive(input$locmods),
            rm_dup_term_anywhere = reactive(input$rm_dup_term_anywhere),
-           n_13c = reactive(input$n_13c),
+           n_13c = reactive(unique(input$n_13c)), # e.g., default range c(0, 0)
            ms1_notches = reactive(input$ms1_notches),
            maxn_neulosses_fnl = reactive(input$maxn_neulosses_fnl),
            maxn_neulosses_vnl = reactive(input$maxn_neulosses_vnl),
@@ -142,7 +141,11 @@ modServer <- function(id)
            # nm_mod_motifs = reactive(input$nm_mod_motifs),
            # val_mod_motifs = reactive(input$val_mod_motifs),
            fixedlabs = reactive(input$fixedlabs),
-           varlabs = reactive(input$varlabs))
+           varlabs = reactive(input$varlabs),
+           use_short_mods = reactive(input$use_short_mods),
+           use_ms1notches = reactive(input$use_ms1notches),
+           use_ms1neulosses = reactive(input$use_ms1neulosses),
+           isolabs = reactive(input$isolabs))
     }
   )
 }

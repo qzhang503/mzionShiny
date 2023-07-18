@@ -2,6 +2,7 @@
 
 library(mzion)
 library(shinyFiles)
+# library(shinyjs)
 
 #' The application user-interface
 #'
@@ -18,16 +19,10 @@ app_ui <- function(request) {
     titlePanel("DDA"),
 
     fluidPage(
+      ###
+      shinyjs::useShinyjs(),
+      ###
       navlistPanel(
-        tabPanel(
-          "Databases",
-          fastaUI("fasta"),
-          # textOutput("fasta"),
-          # textOutput("acc_type"),
-          # textOutput("acc_pattern"),
-          # textOutput("use_ms1_cache"),
-          # tableOutput("files"),
-        ),
         tabPanel(
           "Peaks",
           mgfUI("mgf"),
@@ -47,6 +42,19 @@ app_ui <- function(request) {
           # textOutput("calib_ms1mass"),
           # textOutput("ppm_ms1calib"),
           # textOutput("topn_ms2ion_cuts_new"),
+        ),
+        tabPanel(
+          "Databases",
+          fastaUI("fasta"),
+          # textOutput("fasta"),
+          # textOutput("acc_type"),
+          # textOutput("acc_pattern"),
+          # textOutput("use_ms1_cache"),
+          # tableOutput("files"),
+
+          # textOutput("cached_fasta"),
+          # textOutput("cached_acctype"),
+          # textOutput("cached_accpat"),
         ),
         tabPanel(
           "Modifications",
@@ -93,7 +101,7 @@ app_ui <- function(request) {
           "FDR",
           fdrUI("fdr"),
           # textOutput("target_fdr"),
-          textOutput("fdr_type"),
+          # textOutput("fdr_type"),
           # textOutput("max_pepscores_co"),
           # textOutput("min_pepscores_co"),
           # textOutput("max_protscores_co_new"),
@@ -117,11 +125,20 @@ app_ui <- function(request) {
         #   outpath_UI("db"),
         # ),
       ),
-      bookmarkButton(
-        label = "Bookmarking",
-        title = "Save this application's state and get a URL for sharing or re-analysis."),
-      actionButton("submit", "Submit", class = "btn-lg btn-success"),
-      # dataTableOutput("df"),
+      fluidRow(
+        shinyFiles::shinySaveButton("savepars", "Save parameters", "Save file",
+                                    filetype = list(text = "pars"), viewtype = "icon"),
+        shinyFiles::shinyFilesButton("loadpars", "Load parameters", "Please select a file",
+                                     filetype = list(text = "pars"), multiple = FALSE, viewtype = "detail"),
+        # bookmarkButton(
+        #   label = "Bookmarking",
+        #   title = "Save this application's state and get a URL for sharing or re-analysis."),
+      ),
+      h3(""),
+      fluidRow(
+        actionButton("submit", "Submit", class = "btn-lg btn-success"),
+        actionButton("cancel", "Cancel", class = "btn-lg btn-danger"),
+      ),
     )
   )
 }
