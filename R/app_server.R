@@ -507,7 +507,7 @@ app_server <- function(input, output, session)
     sink()
 
     if (!file.exists(fi_pars <- file.path(out_path(), "mz.pars")))
-      saveRDS(fi_pars)
+      saveRDS(pars(), fi_pars)
 
     do.call(mzion::matchMS, pars())
     shinyjs::toggleState("submit")
