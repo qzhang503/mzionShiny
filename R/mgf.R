@@ -56,7 +56,7 @@ mgfServer <- function(id)
 
       # Output path
       shinyFiles::shinyDirChoose(input, "select_outpath", roots = volumes, session = session,
-                                 restrictions = system.file(package = "base"), allowDirCreate = FALSE)
+                                 restrictions = system.file(package = "base"))
       out_path <- reactive({
         if (is.integer(input$select_outpath)) {
           NULL
@@ -72,7 +72,7 @@ mgfServer <- function(id)
 
       # MGF path
       shinyFiles::shinyDirChoose(input, "select_mgfpath", roots = volumes, session = session,
-                                 restrictions = system.file(package = "base"), allowDirCreate = FALSE)
+                                 restrictions = system.file(package = "base"))
       mgf_path <- reactive({
         if (is.integer(input$select_mgfpath))
           NULL

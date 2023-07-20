@@ -64,6 +64,7 @@ app_ui <- function(request) {
           # textOutput("locmods"),
           # textOutput("rm_dup_term_anywhere"),
           # textOutput("n_13c_new"),
+          # textOutput("n_13c"),
           # textOutput("ms1_notches"),
           # textOutput("maxn_neulosses_fnl"),
           # textOutput("maxn_neulosses_vnl"),

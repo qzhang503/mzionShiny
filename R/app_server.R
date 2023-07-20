@@ -2,6 +2,7 @@
 #'
 #' @param text A text string.
 extract_nums <- function(text) {
+  # if (text == "") return(0)
   text  <- gsub(",\\s*", ",", text)
   split <- strsplit(text, ",", fixed = FALSE)[[1]]
   as.numeric(split)
@@ -18,12 +19,11 @@ app_server <- function(input, output, session)
 {
   ## FASTA
   res_fasta <- fastaServer("fasta")
-
   fasta <- res_fasta$fasta
   acc_type <- res_fasta$acc_type
   acc_pattern <- res_fasta$acc_pattern
   use_ms1_cache <- res_fasta$use_ms1_cache
-
+  n_fasta <- res_fasta$n
   # output$fasta <- renderPrint({ paste0("fasta: ", fasta()) })
   # output$acc_type <- renderPrint({ paste0("acc_type: ", acc_type()) })
   # output$acc_pattern <- renderPrint({ paste0("acc_pattern: ", acc_pattern()) })
@@ -48,12 +48,12 @@ app_server <- function(input, output, session)
   use_ms1notches = mods$use_ms1notches
   use_ms1neulosses = mods$use_ms1neulosses
   isolabs = mods$isolabs
-
   # output$fixedmods <- renderPrint(paste0("fixedmods: ", c(fixedmods()) ))
   # output$varmods <- renderPrint(paste0("varmods: ", c(varmods()) ))
   # output$locmods <- renderPrint(paste0("locmods: ", c(locmods()) ))
   # output$rm_dup_term_anywhere <- renderPrint(paste0("rm_dup_term_anywhere: ", rm_dup_term_anywhere() ))
   # output$n_13c <- renderPrint(paste0("n_13c: ", c(n_13c_new())))
+  # output$n_13c <- renderPrint(paste0("n_13c: ", c(n_13c())))
   # output$ms1_notches <- renderPrint(paste0("ms1_notches: ", c(ms1_notches()) ))
   # output$maxn_neulosses_fnl <- renderPrint(paste0("maxn_neulosses_fnl: ", c(maxn_neulosses_fnl()) ))
   # output$maxn_neulosses_vnl <- renderPrint(paste0("maxn_neulosses_vnl: ", c(maxn_neulosses_vnl()) ))
@@ -78,16 +78,15 @@ app_server <- function(input, output, session)
   min_ms2mass <- mgfs$min_ms2mass
   max_ms2mass <- mgfs$max_ms2mass
   min_scan_num <- mgfs$min_scan_num
-  max_scan_num <- mgfs$max_scan_num
+  max_scan_num <- mgfs$max_scan_num # NA
   min_ret_time <- mgfs$min_ret_time
-  max_ret_time <- mgfs$max_ret_time
+  max_ret_time <- mgfs$max_ret_time # NA
   topn_ms2ions <- mgfs$topn_ms2ions
   exclude_reporter_region <- mgfs$exclude_reporter_region
   calib_ms1mass <- mgfs$calib_ms1mass
   ppm_ms1calib <- mgfs$ppm_ms1calib
   cut_ms2ions <- mgfs$cut_ms2ions
-  topn_ms2ion_cuts <- mgfs$topn_ms2ion_cuts
-
+  topn_ms2ion_cuts <- mgfs$topn_ms2ion_cuts # ""
   # output$out_path <- renderPrint(paste0("out_path: ", out_path() ))
   # output$mgf_path <- renderPrint(paste0("mgf_path: ", mgf_path() ))
   # output$.path_cache <- renderPrint(paste0(".path_cache: ", .path_cache() ))
@@ -127,7 +126,6 @@ app_server <- function(input, output, session)
   enzyme <- searches$enzyme
   noenzyme_maxn <- searches$noenzyme_maxn
   custom_enzyme <- searches$custom_enzyme
-
   # output$min_len <- renderPrint(paste0("min_len: ", min_len() ))
   # output$max_len <- renderPrint(paste0("max_len: ", max_len() ))
   # output$max_miss <- renderPrint(paste0("max_miss: ", max_miss() ))
@@ -155,14 +153,13 @@ app_server <- function(input, output, session)
   fdr_type <- fdrs$fdr_type
   max_pepscores_co <- fdrs$max_pepscores_co
   min_pepscores_co <- fdrs$min_pepscores_co
-  max_protscores_co <- fdrs$max_protscores_co
+  max_protscores_co <- fdrs$max_protscores_co # NA
   max_protnpep_co <- fdrs$max_protnpep_co
   fdr_group <- fdrs$fdr_group
   nes_fdr_group <- fdrs$nes_fdr_group
   topn_mods_per_seq <- fdrs$topn_mods_per_seq
   topn_seqs_per_query <- fdrs$topn_seqs_per_query
   svm_reproc <- fdrs$svm_reproc
-
   # output$target_fdr <- renderPrint(paste0("target_fdr: ", target_fdr() ))
   # output$fdr_type <- renderPrint(paste0("fdr_type: ", fdr_type() ))
   # output$max_pepscores_co <- renderPrint(paste0("max_pepscores_co: ", max_pepscores_co() ))
@@ -181,20 +178,25 @@ app_server <- function(input, output, session)
   ppm_reporters <- quants$ppm_reporters
   tmt_reporter_lower <- quants$tmt_reporter_lower
   tmt_reporter_upper <- quants$tmt_reporter_upper
-
   # output$quant <- renderPrint(paste0("quant: ", quant() ))
   # output$ppm_reporters <- renderPrint(paste0("ppm_reporters: ", ppm_reporters() ))
   # output$tmt_reporter_lower <- renderPrint(paste0("tmt_reporter_lower: ", tmt_reporter_lower() ))
   # output$tmt_reporter_upper <- renderPrint(paste0("tmt_reporter_upper: ", tmt_reporter_upper() ))
 
-  # may be converted in matchMS
+  ## Mzion compatibles
   max_protscores_co_new <- reactive({ if (is.na(max_protscores_co())) Inf else max_protscores_co() })
-  max_scan_num_new <- reactive({ if (is.na(max_scan_num())) Inf else max_scan_num() })
+  max_scan_num_new <- reactive({ if (is.na(max_scan_num())) .Machine$integer.max else max_scan_num() })
   max_ret_time_new <- reactive({ if (is.na(max_ret_time())) Inf else max_ret_time() })
   topn_ms2ion_cuts_new <- reactive({ if (topn_ms2ion_cuts() == "") NA else topn_ms2ion_cuts() })
-  n_13c_new <- reactive(seq(n_13c()[1], n_13c()[length(n_13c())]))
-  ms1_notches_num <- reactive(extract_nums(ms1_notches()))
+  n_13c_new <- reactive(seq(n_13c()[1], n_13c()[length(n_13c())])) # c(1, 1) -> c(1)
+  noenzyme_maxn_new <- reactive({ if (is.null(noenzyme_maxn())) 0L else noenzyme_maxn() })
 
+  ms1_notches_num <- reactive({
+    nums <- extract_nums(ms1_notches())
+    nums <- if (length(nums) && is.numeric(nums)) nums else 0
+  })
+
+  ## mzion::matchMS parameters
   pars <- reactive({
     list(
       out_path = out_path(),
@@ -202,20 +204,20 @@ app_server <- function(input, output, session)
       fasta = fasta(),
       acc_type = acc_type(),
       acc_pattern = acc_pattern(), # NULL
-      fixedmods = fixedmods(),
-      varmods = varmods(),
+      fixedmods = fixedmods(), # NULL if empty
+      varmods = varmods(), # NULL if empty
       rm_dup_term_anywhere = rm_dup_term_anywhere(),
-      ms1_neulosses = ms1_neulosses(), # NULL
+      ms1_neulosses = ms1_neulosses(), # NULL if empty
       maxn_neulosses_fnl = maxn_neulosses_fnl(),
       maxn_neulosses_vnl = maxn_neulosses_vnl(),
       fixedlabs = fixedlabs(), # NULL
       varlabs = varlabs(), # NULL
-      locmods = locmods(),
+      locmods = locmods(), # NULL if empty
       # mod_motifs = mod_motifs(), # NULL
       enzyme = enzyme(),
-      custom_enzyme = custom_enzyme(), # c(Cterm = NULL, Nterm = NULL)
+      custom_enzyme = custom_enzyme(), # "" -> matchMS: c(Cterm = NULL, Nterm = NULL)
       nes_fdr_group = nes_fdr_group(),
-      noenzyme_maxn = noenzyme_maxn(),
+      noenzyme_maxn = noenzyme_maxn_new(), # NULL -> matchMS: 0L
       # maxn_fasta_seqs = 200000L,
       maxn_vmods_setscombi = maxn_vmods_setscombi(),
       maxn_vmods_per_pep = maxn_vmods_per_pep(),
@@ -292,47 +294,42 @@ app_server <- function(input, output, session)
     )
   })
 
-  ## Save or reload
-  volumes <- reactive(c(Project = out_path(), Home = fs::path_home_r(),
-                        Home_win = fs::path_home(), shinyFiles::getVolumes()()))
+  ## Save parameters
+  volume0 <- c(Home = fs::path_home_r(), Home_win = fs::path_home(), shinyFiles::getVolumes()())
+  volumes <- reactive(c(Project = out_path(), volume0))
 
   observeEvent(input$savepars, {
-    # back to Shiny formats
+    # back to Shiny formats for reloading
     pars0 <- pars()
-    pars0[["n_13c"]] <- n_13c()
-    pars0[["topn_ms2ion_cuts"]] <- topn_ms2ion_cuts()
-    pars0[["max_protscores_co"]] <- max_protscores_co()
-    pars0[["max_scan_num"]] <- max_scan_num()
-    pars0[["max_ret_time"]] <- max_ret_time()
+    pars0[["max_protscores_co"]] <- max_protscores_co() # NA
+    pars0[["max_scan_num"]] <- max_scan_num() # NA
+    pars0[["max_ret_time"]] <- max_ret_time() # NA
+    pars0[["topn_ms2ion_cuts"]] <- topn_ms2ion_cuts() # ""
+    pars0[["n_13c"]] <- n_13c() # c(1, 1)
+    pars0[["ms1_notches"]] <- ms1_notches() # ""
+    pars0[["noenzyme_maxn"]] <- noenzyme_maxn()
 
     if (out_path() == "") {
-      print("Set up working direcotry first")
+      print("Set up a working direcotry first")
     }
     else {
       shinyFiles::shinyFileSave(input, "savepars", roots = volumes(), session = session,
                                 restrictions = system.file(package = "base"))
       fileinfo <- shinyFiles::parseSavePath(volumes(), input$savepars)
 
-      # file selected
       if (nrow(fileinfo))
         saveRDS(pars0, fileinfo$datapath)
     }
   })
 
-  use_cached_pars <- reactiveVal(FALSE)
+  ## Reload parameters
+  # use observeEvent(input$loadpars) if no need of cached_pars
   cached_pars <- eventReactive(input$loadpars, {
-    shinyFiles::shinyFileChoose(input, "loadpars", roots = volumes, session = session)
+    shinyFiles::shinyFileChoose(input, "loadpars", roots = volumes(), session = session)
     fileinfo <- shinyFiles::parseFilePaths(volumes(), input$loadpars)
-
-    if (nrow(fileinfo)) {
-      use_cached_pars(TRUE)
-      readRDS(fileinfo$datapath)
-    }
-    else
-      NULL
+    if (nrow(fileinfo)) readRDS(fileinfo$datapath) else NULL
   })
 
-  # why need to load parameter file twice to update the FASTA field?
   observeEvent(cached_pars(), {
     if (!is.null(cached_pars())) {
       ## FASTA
@@ -343,28 +340,22 @@ app_server <- function(input, output, session)
 
       updateCheckboxInput(session, NS("fasta", "use_ms1_cache"), "Use cache",
                           value = cached_pars()$use_ms1_cache)
-      updateNumericInput(session, NS("fasta", "n"), "Number of databases",
-                         value = length(cache_fas))
+      # updateNumericInput(session, NS("fasta", "n"), "Number of databases", value = length(cache_fas))
 
-      faseqs <- seq_along(cache_fas)
-      fas_ids <- paste0("fasta_", faseqs)
-      acc_ids <- paste0("acc_type_", faseqs)
-      pat_ids <- paste0("acc_pattern_", faseqs)
-      # use_cuspat_ids <- paste0("use_custom_pat_", faseqs)
-
+      idxes <- seq_along(cache_fas)
+      fas_ids <- paste0("fasta_", idxes)
+      acc_ids <- paste0("acc_type_", idxes)
+      pat_ids <- paste0("acc_pattern_", idxes)
+      # use_cuspat_ids <- paste0("use_custom_pat_", idxes)
       accessions <- c("uniprot_acc", "uniprot_id", "refseq_acc", "other")
 
-      for (i in faseqs) {
+      for (i in idxes) {
         updateTextInput(session, NS("fasta", fas_ids[[i]]), paste("Database", i), value = cache_fas[[i]])
         updateRadioButtons(session, NS("fasta", acc_ids[[i]]), "Accession type",
                            accessions, selected = cache_acctypes[[i]])
         updateTextInput(session, NS("fasta", pat_ids[[i]]), "Accession pattern (optional)",
                         value = cache_accpats[[i]], placeholder = "Regular expression for \"other\"")
       }
-
-      # output$cached_fasta <- renderPrint({ paste0("Cached FASTAs: ", cache_fas) })
-      # output$cached_acctype <- renderPrint({ paste0("Cached accession types: ", cache_acctypes) })
-      # output$cached_accpat <- renderPrint({ paste0("Cached accession patterns: ", cache_accpats) })
 
       ## MGF
       # if out_path changed -> cached_pars not found...
@@ -417,7 +408,6 @@ app_server <- function(input, output, session)
       updateCheckboxInput(session, NS("mod", "use_ms1neulosses"), "Precursor neutral losses",
                           value = cached_pars()$use_ms1neulosses)
       updateCheckboxInput(session, NS("mod", "isolabs"), "Isotope labels", value = cached_pars()$isolabs)
-      #
       updateCheckboxInput(session, NS("mod", "pepmotifs"), "Peptide motifs", value = cached_pars()$pepmotifs)
       updateTextInput(session, NS("mod", "ms1_notches"), "Values", value = cached_pars()$ms1_notches,
                       placeholder = "-97.976896, -79.96633")
@@ -465,7 +455,7 @@ app_server <- function(input, output, session)
                         c("by", "ax", "cz"), selected = cached_pars()$type_ms2ions)
       updateSelectInput(session, NS("search", "enzyme"), "Enzyme", enzymes, selected = cached_pars()$enzyme)
       updateCheckboxInput(session, NS("search", "customenzyme"), "Custom enzyme", value = cached_pars()$customenzyme)
-      # no update?
+      # no update? the same as fasta need to load the parameter file twice
       updateNumericInput(session, NS("search", "noenzyme_maxn"),
                          paste0("Max number of peptide lengths for a section ",
                                 "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
@@ -508,7 +498,7 @@ app_server <- function(input, output, session)
     }
   })
 
-  ## Bookmarking
+  ## Submit
   btn_submit <- eventReactive(input$submit, {
     shinyjs::toggleState("submit")
 
@@ -516,22 +506,17 @@ app_server <- function(input, output, session)
     print(pars())
     sink()
 
-    if (use_cached_pars()) {
-      do.call(mzion::matchMS, cached_pars())
-    }
-    else {
-      do.call(mzion::matchMS, pars())
-    }
+    if (!file.exists(fi_pars <- file.path(out_path(), "mz.pars")))
+      saveRDS(fi_pars)
 
+    do.call(mzion::matchMS, pars())
     shinyjs::toggleState("submit")
   })
-  observe(btn_submit()) # trigger eventReactive
+  observe(btn_submit())
 
   btn_cancel <- observeEvent(input$cancel, ignoreInit = TRUE, {
     stop("Process interrupted.", call. = FALSE)
   })
-
-  # modelDialog() before empty folder...
 }
 
 

@@ -4,10 +4,12 @@
 \alias{fastaUI}
 \title{User interface of FASTA parameters}
 \usage{
-fastaUI(id)
+fastaUI(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_acc", "other"))
 }
 \arguments{
 \item{id}{Namespace identifier.}
+
+\item{accessions}{Protein accession types.}
 }
 \description{
 User interface of FASTA parameters

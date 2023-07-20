@@ -30,7 +30,11 @@ searchUI <- function(id)
     ),
     selectInput(NS(id, "type_ms2ions"), "MS2 fragments", c("by", "ax", "cz"), selected = "by"),
     selectInput(NS(id, "enzyme"), "Enzyme", enzymes, selected = "Trypsin_P"),
-    uiOutput(NS(id, "nes")),
+    # uiOutput(NS(id, "nes")),
+    numericInput(NS(id, "noenzyme_maxn"),
+                 paste0("Peptide lengths for a section search at noenzyme specificity ",
+                        "(e.g., lengths 7-21, 22-36, ... at a value of 15) "),
+                 value = 0),
     checkboxInput(NS(id, "customenzyme"), "Custom enzyme"),
     conditionalPanel(
       condition = "input.customenzyme == true",
@@ -79,19 +83,21 @@ searchServer <- function(id)
                         placeholder = "Cterm = NULL, Nterm = NULL")
       })
 
-      enzyme <- reactive(input$enzyme)
-      observe({
-        if (enzyme() == "Noenzyme") {
-          output$nes <- renderUI({
-            fluidRow(
-              column(8, numericInput(NS(id, "noenzyme_maxn"),
-                                     paste0("Max number of peptide lengths for a section ",
-                                            "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
-                                     value = 0)),
-            )
-          })
-        }
-      })
+      if (FALSE) {
+        enzyme <- reactive(input$enzyme)
+        observe({
+          if (enzyme() == "Noenzyme") {
+            output$nes <- renderUI({
+              fluidRow(
+                column(8, numericInput(NS(id, "noenzyme_maxn"),
+                                       paste0("Max number of peptide lengths for a section ",
+                                              "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
+                                       value = 0)),
+              )
+            })
+          }
+        })
+      }
 
       list(min_len = reactive(input$min_len),
            max_len = reactive(input$max_len),

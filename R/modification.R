@@ -17,7 +17,7 @@ modUI <- function(id)
                             selected = c("Oxidation (Anywhere = M)", "Deamidated (Anywhere = N)",
                                          "Deamidated (Anywhere = Q)"), multiple = TRUE)),
     ),
-    column(4, sliderInput(ns("n_13c"), "Numbers of 13C", value = c(0, 0), min = -1, max = 3)),
+    column(4, sliderInput(ns("n_13c"), "Numbers of 13C", min = -1, max = 3, value = c(0, 0))),
     column(4, checkboxInput(NS(id, "rm_dup_term_anywhere"),
                             paste0("Remove the same-site combinations at both terminal and anywhere positions ",
                                    "(e.g., N-term Q and Anywhere Q)"), value = TRUE)),
@@ -103,7 +103,7 @@ modServer <- function(id)
         updateSelectInput(session, "locmods", "Localizations", umods_short$modification,
                           selected = c("Oxidation (Anywhere = M)", "Deamidated (Anywhere = N)",
                                        "Deamidated (Anywhere = Q)"))
-        updateSliderInput(session, "n_13c", "Numbers of 13C", value = c(0, 0), min = -1, max = 3)
+        updateSliderInput(session, "n_13c", "Numbers of 13C", min = -1, max = 3, value = c(0, 0))
         updateCheckboxInput(session, "rm_dup_term_anywhere",
                             paste0("Remove the same-site combinations at both terminal and anywhere positions ",
                                    "(e.g., N-term Q and Anywhere Q)"), value = FALSE)
@@ -133,7 +133,8 @@ modServer <- function(id)
            varmods = reactive(input$varmods),
            locmods = reactive(input$locmods),
            rm_dup_term_anywhere = reactive(input$rm_dup_term_anywhere),
-           n_13c = reactive(unique(input$n_13c)), # e.g., default range c(0, 0)
+           # n_13c = reactive(unique(input$n_13c)), # e.g., default range c(0, 0)
+           n_13c = reactive(input$n_13c), # e.g., default range c(0, 0)
            ms1_notches = reactive(input$ms1_notches),
            maxn_neulosses_fnl = reactive(input$maxn_neulosses_fnl),
            maxn_neulosses_vnl = reactive(input$maxn_neulosses_vnl),
