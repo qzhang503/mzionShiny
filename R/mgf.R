@@ -12,7 +12,7 @@ mgfUI <- function(id)
       column(4, shinyFiles::shinyDirButton(NS(id, "select_mgfpath"), "MGF path", "Please select a folder")),
       column(12, textInput(NS(id, "mgf_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project/mgf"))),
       column(4, shinyFiles::shinyDirButton(NS(id, "select_cachepath"), "Cache folder", "Please select a folder")),
-      column(12, textInput(NS(id, ".path_cache"), label = NULL, value = "~/mzion/.MSearches (1.3.0)/Cache/Calls")),
+      column(12, textInput(NS(id, ".path_cache"), label = NULL, value = "~/mzion/.MSearches (1.3.0.1)/Cache/Calls")),
     ),
     fluidRow(
       column(4, numericInput(NS(id, "min_ms1_charge"), "Min MS1 charge state", 2)),
@@ -105,7 +105,7 @@ mgfServer <- function(id)
         updateTextInput(session, "mgf_path", label = NULL, value = "~",
                         placeholder = "~/Mzion/My_project/mgf")
         updateTextInput(session, ".path_cache", "Cache folder",
-                        value = "~/mzion/.MSearches (1.3.0)/Cache/Calls")
+                        value = "~/mzion/.MSearches (1.3.0.1)/Cache/Calls")
         updateNumericInput(session, "min_ms1_charge", "Min MS1 charge state", 2)
         updateNumericInput(session, "max_ms1_charge", "Max MS1 charge state", 6)
         updateNumericInput(session, "min_ms2mass", "Min MS2 mass", 115)
