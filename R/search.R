@@ -42,7 +42,11 @@ searchUI <- function(id)
       textInput(NS(id, "custom_enzyme"), "Specificity (in regular expression)",
                 placeholder = "Cterm = NULL, Nterm = NULL")
     ),
-    actionButton(NS(id, "reset"), "Reset", class = "btn-danger"),
+    actionButton(NS(id, "reset"), "Reset",
+                 style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
+                 title = "Reset values in the current tab"),
+
+
   )
 }
 
@@ -96,6 +100,25 @@ searchServer <- function(id)
               )
             })
           }
+        })
+      }
+
+      if (FALSE) {
+        output$nes <- renderUI({
+          x <- numericInput(NS(id, "noenzyme_maxn"),
+                            paste0("Max number of peptide lengths for a section ",
+                                   "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
+                            value = dplyr::coalesce(input$noenzyme_maxn, 0))
+
+          if (input$enzyme != "Noenzyme") {
+            x <- div(style = "visibility:hidden;", x)
+          }
+
+          # fluidRow(
+          #   column(8, x)
+          # )
+
+          x
         })
       }
 

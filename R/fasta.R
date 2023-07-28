@@ -115,49 +115,56 @@ fastaUI <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_acc"
     fluidRow(
       column(4, checkboxInput(NS(id, "use_ms1_cache"), "Use cache", value = TRUE)),
     ),
-
     fluidRow(
-      shinyFiles::shinyFilesButton(NS(id, "select_1"), "Select a FASTA file", "Select Files", multiple = FALSE),
-      textInput(NS(id, "fasta_1"), "Database 1", value = "", placeholder = file.path("~/Mzion/DB/db1.fasta")),
-      radioButtons(NS(id, "acc_type_1"), "Accession type 1", accessions),
-      checkboxInput(NS(id, "custom_accpat_1"), "Custom accession 1"),
-      conditionalPanel(
-        condition = "input.custom_accpat_1 == true",
-        ns = ns,
-        column(4, textInput(NS(id, "acc_pattern_1"), "Accession pattern 1"), NULL)
+      column(8,
+             shinyFiles::shinyFilesButton(NS(id, "select_1"), "Select a FASTA file", "Select Files",
+                                             multiple = FALSE, style = "background-color: #f5f5f5"),
+             textInput(NS(id, "fasta_1"), "Database 1", value = "", placeholder = file.path("~/Mzion/DB/db1.fasta")),
+             radioButtons(NS(id, "acc_type_1"), "Accession type 1", accessions),
+             checkboxInput(NS(id, "custom_accpat_1"), "Custom accession 1"),
+             conditionalPanel(
+               condition = "input.custom_accpat_1 == true",
+               ns = ns,
+               textInput(NS(id, "acc_pattern_1"), "Accession pattern 1"), NULL),
       ),
     ),
     fluidRow(
-      shinyFiles::shinyFilesButton(NS(id, "select_2"), "Select a FASTA file", "Select Files", multiple = FALSE),
-      textInput(NS(id, "fasta_2"), "Database 2", value = "", placeholder = file.path("~/Mzion/DB/db2.fasta")),
-      radioButtons(NS(id, "acc_type_2"), "Accession type 2", accessions),
-      checkboxInput(NS(id, "custom_accpat_2"), "Custom accession 2"),
-      conditionalPanel(
-        condition = "input.custom_accpat_2 == true",
-        ns = ns,
-        column(4, textInput(NS(id, "acc_pattern_2"), "Accession pattern 2"), NULL)
+      column(8,
+             shinyFiles::shinyFilesButton(NS(id, "select_2"), "Select a FASTA file", "Select Files",
+                                          multiple = FALSE, style = "background-color: #f5f5f5"),
+             textInput(NS(id, "fasta_2"), "Database 2", value = "", placeholder = file.path("~/Mzion/DB/db2.fasta")),
+             radioButtons(NS(id, "acc_type_2"), "Accession type 2", accessions),
+             checkboxInput(NS(id, "custom_accpat_2"), "Custom accession 2"),
+             conditionalPanel(
+               condition = "input.custom_accpat_2 == true",
+               ns = ns,
+               textInput(NS(id, "acc_pattern_2"), "Accession pattern 2"), NULL),
       ),
     ),
     fluidRow(
-      shinyFiles::shinyFilesButton(NS(id, "select_3"), "Select a FASTA file", "Select Files", multiple = FALSE),
-      textInput(NS(id, "fasta_3"), "Database 3", value = "", placeholder = file.path("~/Mzion/DB/db3.fasta")),
-      radioButtons(NS(id, "acc_type_3"), "Accession type 3", accessions),
-      checkboxInput(NS(id, "custom_accpat_3"), "Custom accession 3"),
-      conditionalPanel(
-        condition = "input.custom_accpat_3 == true",
-        ns = ns,
-        column(4, textInput(NS(id, "acc_pattern_3"), "Accession pattern 3"), NULL)
+      column(8,
+             shinyFiles::shinyFilesButton(NS(id, "select_3"), "Select a FASTA file", "Select Files",
+                                          multiple = FALSE, style = "background-color: #f5f5f5"),
+             textInput(NS(id, "fasta_3"), "Database 3", value = "", placeholder = file.path("~/Mzion/DB/db3.fasta")),
+             radioButtons(NS(id, "acc_type_3"), "Accession type 3", accessions),
+             checkboxInput(NS(id, "custom_accpat_3"), "Custom accession 3"),
+             conditionalPanel(
+               condition = "input.custom_accpat_3 == true",
+               ns = ns,
+               textInput(NS(id, "acc_pattern_3"), "Accession pattern 3"), NULL),
       ),
     ),
     fluidRow(
-      shinyFiles::shinyFilesButton(NS(id, "select_4"), "Select a FASTA file", "Select Files", multiple = FALSE),
-      textInput(NS(id, "fasta_4"), "Database 4", value = "", placeholder = file.path("~/Mzion/DB/db4.fasta")),
-      radioButtons(NS(id, "acc_type_4"), "Accession type 4", accessions),
-      checkboxInput(NS(id, "custom_accpat_4"), "Custom accession 4"),
-      conditionalPanel(
-        condition = "input.custom_accpat_4 == true",
-        ns = ns,
-        column(4, textInput(NS(id, "acc_pattern_4"), "Accession pattern 4"), NULL)
+      column(8,
+             shinyFiles::shinyFilesButton(NS(id, "select_4"), "Select a FASTA file", "Select Files",
+                                          multiple = FALSE, style = "background-color: #f5f5f5"),
+             textInput(NS(id, "fasta_4"), "Database 4", value = "", placeholder = file.path("~/Mzion/DB/db4.fasta")),
+             radioButtons(NS(id, "acc_type_4"), "Accession type 4", accessions),
+             checkboxInput(NS(id, "custom_accpat_4"), "Custom accession 4"),
+             conditionalPanel(
+               condition = "input.custom_accpat_4 == true",
+               ns = ns,
+               textInput(NS(id, "acc_pattern_4"), "Accession pattern 4"), NULL),
       ),
     ),
   )

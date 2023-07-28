@@ -1,18 +1,22 @@
 #' User interface of MGF parameters
 #'
 #' @param id Namespace identifier.
-mgfUI <- function(id)
+#' @param quant Quantitation method.
+mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt18"))
 {
   ns <- NS(id)
 
   tagList(
     fluidRow(
-      column(4, shinyFiles::shinyDirButton(NS(id, "select_outpath"), "Output path", "Please select a folder")),
+      column(4, shinyFiles::shinyDirButton(NS(id, "select_outpath"), "Output path", "Please select a folder",
+                                           style = "background-color: #f5f5f5")),
       column(12, textInput(NS(id, "out_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project"))),
-      column(4, shinyFiles::shinyDirButton(NS(id, "select_mgfpath"), "MGF path", "Please select a folder")),
+      column(4, shinyFiles::shinyDirButton(NS(id, "select_mgfpath"), "MGF path", "Please select a folder",
+                                           style = "background-color: #f5f5f5")),
       column(12, textInput(NS(id, "mgf_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project/mgf"))),
-      column(4, shinyFiles::shinyDirButton(NS(id, "select_cachepath"), "Cache folder", "Please select a folder")),
-      column(12, textInput(NS(id, ".path_cache"), label = NULL, value = "~/mzion/.MSearches (1.3.0.1)/Cache/Calls")),
+      column(4, shinyFiles::shinyDirButton(NS(id, "select_cachepath"), "Cache folder", "Please select a folder",
+                                           style = "background-color: #f5f5f5")),
+      column(12, textInput(NS(id, ".path_cache"), label = NULL, value = formals(mzion::matchMS)$.path_cache)),
     ),
     fluidRow(
       column(4, numericInput(NS(id, "min_ms1_charge"), "Min MS1 charge state", 2)),
@@ -39,7 +43,13 @@ mgfUI <- function(id)
       textInput(NS(id, "topn_ms2ion_cuts"), "Cuts (m/z = percent)", value = NA,
                 placeholder = "`1000` = 90, `1100` = 5, `4500` = 5"),
     ),
-    actionButton(NS(id, "reset"), "Reset", class = "btn-danger"),
+    fluidRow(
+      column(4, selectInput(NS(id, "quant"), "Quantitation", quant, selected = "none")),
+    ),
+    uiOutput(NS(id, "tmt")),
+    actionButton(NS(id, "reset"), "Reset",
+                 style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
+                 title = "Reset values in the current tab"),
   )
 }
 
@@ -47,7 +57,8 @@ mgfUI <- function(id)
 #' Server-side processing of MGF parameters
 #'
 #' @param id Namespace identifier.
-mgfServer <- function(id)
+#' @param quant Quantitation method.
+mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt18"))
 {
   moduleServer(
     id,
@@ -58,9 +69,9 @@ mgfServer <- function(id)
       shinyFiles::shinyDirChoose(input, "select_outpath", roots = volumes, session = session,
                                  restrictions = system.file(package = "base"))
       out_path <- reactive({
-        if (is.integer(input$select_outpath)) {
+        if (is.integer(input$select_outpath))
           NULL
-        } else {
+        else {
           fileinfo <- shinyFiles::parseDirPath(volumes, input$select_outpath)
           fileinfo <- gsub("\\\\", "/", fileinfo)
         }
@@ -98,14 +109,29 @@ mgfServer <- function(id)
         updateTextInput(session = session, inputId = ".path_cache", label = NULL, value = .path_cache())
       })
 
+      ## Quant
+      observeEvent(input$quant, {
+        if (grepl("^tmt", input$quant)) {
+          output$tmt <- renderUI({
+            fluidRow(
+              column(4, numericInput(NS(id, "ppm_reporters"), label = "Reporter tolerance (ppm)",
+                                     value = 10, min = 1)),
+              column(4, numericInput(NS(id, "tmt_reporter_lower"), label = "Reporter lower bound",
+                                     value = 126.1, min = 0)),
+              column(4, numericInput(NS(id, "tmt_reporter_upper"), label = "Reporter upper bound",
+                                     value = 135.2, min = 0)),
+            )
+          })
+        }
+      })
 
       observeEvent(input$reset, {
         updateTextInput(session, "out_path", label = NULL, value = "~",
                         placeholder = file.path("~/Mzion/My_Project"))
         updateTextInput(session, "mgf_path", label = NULL, value = "~",
                         placeholder = "~/Mzion/My_project/mgf")
-        updateTextInput(session, ".path_cache", "Cache folder",
-                        value = "~/mzion/.MSearches (1.3.0.1)/Cache/Calls")
+        updateTextInput(session, ".path_cache", NULL,
+                        value = formals(mzion::matchMS)$.path_cache)
         updateNumericInput(session, "min_ms1_charge", "Min MS1 charge state", 2)
         updateNumericInput(session, "max_ms1_charge", "Max MS1 charge state", 6)
         updateNumericInput(session, "min_ms2mass", "Min MS2 mass", 115)
@@ -121,6 +147,10 @@ mgfServer <- function(id)
         updateCheckboxInput(session, "cut_ms2ions", "Cut MS2 by regions", value = FALSE)
         updateTextInput(session, "topn_ms2ion_cuts", "Cuts (m/z = percent)", value = NA,
                         placeholder = "`1000` = 90, `1100` = 5, `4500` = 5")
+        updateSelectInput(session, "quant", "Quantitation", quant, selected = "none")
+        updateNumericInput(session, "ppm_reporters", "Reporter tolerance (ppm)", value = 10, min = 1)
+        updateNumericInput(session, "tmt_reporter_lower", "Reporter lower bound", value = 126.1, min = 0)
+        updateNumericInput(session, "tmt_reporter_upper", "Reporter upper bound", value = 135.2, min = 0)
       })
 
       list(mgf_path = reactive(input$mgf_path),
@@ -139,7 +169,11 @@ mgfServer <- function(id)
            cut_ms2ions = reactive(input$cut_ms2ions),
            topn_ms2ion_cuts = reactive(input$topn_ms2ion_cuts),
            .path_cache = reactive(input$.path_cache),
-           out_path = reactive(input$out_path)
+           out_path = reactive(input$out_path),
+           quant = reactive(input$quant),
+           ppm_reporters = reactive(input$ppm_reporters),
+           tmt_reporter_lower = reactive(input$tmt_reporter_lower),
+           tmt_reporter_upper = reactive(input$tmt_reporter_upper)
       )
     }
   )

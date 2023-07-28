@@ -65,7 +65,9 @@ modUI <- function(id)
     #     column(4, textInput(ns("val_mod_motifs"), "Motif", NULL, placeholder = "NM")),
     #   )
     # ),
-    actionButton(ns("reset"), "Reset", class = "btn-danger"),
+    actionButton(ns("reset"), "Reset",
+                 style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
+                 title = "Reset values in the current tab"),
   )
 }
 

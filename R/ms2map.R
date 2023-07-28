@@ -1,0 +1,92 @@
+#' User interface of MGF parameters
+#'
+#' @param id Namespace identifier.
+#' @param type_ms2ions Type of MS2 ions.
+map_ms2UI <- function(id, type_ms2ions = c("by", "ax", "cz"))
+{
+  ns <- NS(id)
+
+  sidebarLayout(
+    sidebarPanel(
+      shinyFiles::shinyFilesButton(NS(id, "btn_file"), "Select a PSM file", "Select Files",
+                                   filetype = list(text = "txt"), multiple = FALSE,
+                                   style = "background-color: #f5f5f5"),
+      textInput(NS(id, "in_name"), NULL, value = "", placeholder = "~/Mzion/Project/psmQ.txt"),
+      uiOutput(NS(id, "raws")),
+      numericInput(NS(id, "scan"), "Scan number", 1),
+      numericInput(NS(id, "rank"), "PSM rank", 1, min = 1),
+      selectInput(NS(id, "type_ms2ions"), "Type of MS2", type_ms2ions, selected = "by"),
+      checkboxInput(NS(id, "is_decoy"), "Is decoy", value = FALSE),
+      textInput(NS(id, "out_name"), "Output file name", placeholder = file.path("bar.png")),
+      fluidRow(
+        column(3, numericInput(NS(id, "width"), "Image width", 12)),
+        column(3, numericInput(NS(id, "height"), "Image height", 6)),
+      ),
+      actionButton(NS(id, "view"), "View", style = "background-color:#41ab5d; width:70px;
+                 font-size:100%; color:white"),
+      width = 4
+    ),
+    mainPanel(
+      plotOutput(NS(id, "plot")),
+      width = 8
+    )
+  )
+}
+
+
+#' Server-side processing of MGF parameters
+#'
+#' @param id Namespace identifier.
+#' @param type_ms2ions Type of MS2 ions.
+map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"))
+{
+  moduleServer(
+    id,
+    function(input, output, session) {
+      volume0 <- c(Home = fs::path_home_r(), Home_win = fs::path_home(), shinyFiles::getVolumes()())
+      volumes <- reactive(c(Project = input$out_path, volume0))
+
+      ## PSM
+      observeEvent(input$btn_file, ignoreInit = TRUE, {
+        shinyFiles::shinyFileChoose(input, "btn_file", roots = volumes(), session = session)
+        fileinfo <- shinyFiles::parseFilePaths(volumes(), input$btn_file)
+        fileinfo$datapath <- gsub("\\\\", "/", fileinfo$datapath)
+        updateTextInput(session = session, inputId = "in_name", label = NULL,
+                        value = unname(fileinfo$datapath ))
+      })
+
+      psms <- eventReactive(input$in_name, ignoreInit = TRUE, {
+        if (file.exists(input$in_name))
+          readr::read_tsv(input$in_name, col_types = mzion::get_mzion_coltypes())
+        else
+          NULL
+      })
+
+      observeEvent(psms(), {
+        if (length(raws <- unique(psms()$raw_file))) {
+          output$raws <- renderUI({
+            selectInput(NS(id, "raws"), "MS files", raws)
+          })
+        }
+      })
+
+      btn_view <- eventReactive(input$view, {
+        shinyjs::toggleState("view")
+        ans <- mzion::mapMS2ions(out_path = gsub("(.*)/[^/]+", "\\1", input$in_name),
+                                 in_name = gsub(".*/([^/]+)", "\\1", input$in_name),
+                                 out_name = input$out_name, raw_file = input$raws,
+                                 scan = input$scan, rank = input$rank,
+                                 is_decoy = input$is_decoy,
+                                 type_ms2ions = input$type_ms2ions,
+                                 width = input$width, height = input$height)
+        shinyjs::toggleState("view")
+
+        ans
+      })
+
+      output$plot <- renderPlot(btn_view()$p)
+    }
+  )
+}
+
+

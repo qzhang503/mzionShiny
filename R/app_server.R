@@ -2,7 +2,6 @@
 #'
 #' @param text A text string.
 extract_nums <- function(text) {
-  # if (text == "") return(0)
   text  <- gsub(",\\s*", ",", text)
   split <- strsplit(text, ",", fixed = FALSE)[[1]]
   as.numeric(split)
@@ -87,6 +86,14 @@ app_server <- function(input, output, session)
   ppm_ms1calib <- mgfs$ppm_ms1calib
   cut_ms2ions <- mgfs$cut_ms2ions
   topn_ms2ion_cuts <- mgfs$topn_ms2ion_cuts # ""
+  quant <- mgfs$quant
+  ppm_reporters <- mgfs$ppm_reporters
+  tmt_reporter_lower <- mgfs$tmt_reporter_lower
+  tmt_reporter_upper <- mgfs$tmt_reporter_upper
+  # output$quant <- renderPrint(paste0("quant: ", quant() ))
+  # output$ppm_reporters <- renderPrint(paste0("ppm_reporters: ", ppm_reporters() ))
+  # output$tmt_reporter_lower <- renderPrint(paste0("tmt_reporter_lower: ", tmt_reporter_lower() ))
+  # output$tmt_reporter_upper <- renderPrint(paste0("tmt_reporter_upper: ", tmt_reporter_upper() ))
   # output$out_path <- renderPrint(paste0("out_path: ", out_path() ))
   # output$mgf_path <- renderPrint(paste0("mgf_path: ", mgf_path() ))
   # output$.path_cache <- renderPrint(paste0(".path_cache: ", .path_cache() ))
@@ -160,6 +167,18 @@ app_server <- function(input, output, session)
   topn_mods_per_seq <- fdrs$topn_mods_per_seq
   topn_seqs_per_query <- fdrs$topn_seqs_per_query
   svm_reproc <- fdrs$svm_reproc
+  svm_kernel <- fdrs$svm_kernel
+  svm_feats <- fdrs$svm_feats
+  use_pep_score <- fdrs$use_pep_score
+  use_pep_ret_range <- fdrs$use_pep_ret_range
+  use_pep_delta <- fdrs$use_pep_delta
+  use_pep_n_ms2 <- fdrs$use_pep_n_ms2
+  use_pep_expect <- fdrs$use_pep_expect
+  use_pep_exp_mz <- fdrs$use_pep_exp_mz
+  use_pep_exp_mr <- fdrs$use_pep_exp_mr
+  use_pep_tot_int <- fdrs$use_pep_tot_int
+  use_pep_n_matches2 <- fdrs$use_pep_n_matches2
+  use_pep_ms2_deltas_mean <- fdrs$use_pep_ms2_deltas_mean
   # output$target_fdr <- renderPrint(paste0("target_fdr: ", target_fdr() ))
   # output$fdr_type <- renderPrint(paste0("fdr_type: ", fdr_type() ))
   # output$max_pepscores_co <- renderPrint(paste0("max_pepscores_co: ", max_pepscores_co() ))
@@ -171,17 +190,7 @@ app_server <- function(input, output, session)
   # output$topn_mods_per_seq <- renderPrint(paste0("topn_mods_per_seq: ", topn_mods_per_seq() ))
   # output$topn_seqs_per_query <- renderPrint(paste0("topn_seqs_per_query: ", topn_seqs_per_query() ))
   # output$svm_reproc <- renderPrint(paste0("svm_reproc: ", svm_reproc() ))
-
-  ## Quant
-  quants <- quantServer("quant")
-  quant <- quants$quant
-  ppm_reporters <- quants$ppm_reporters
-  tmt_reporter_lower <- quants$tmt_reporter_lower
-  tmt_reporter_upper <- quants$tmt_reporter_upper
-  # output$quant <- renderPrint(paste0("quant: ", quant() ))
-  # output$ppm_reporters <- renderPrint(paste0("ppm_reporters: ", ppm_reporters() ))
-  # output$tmt_reporter_lower <- renderPrint(paste0("tmt_reporter_lower: ", tmt_reporter_lower() ))
-  # output$tmt_reporter_upper <- renderPrint(paste0("tmt_reporter_upper: ", tmt_reporter_upper() ))
+  # output$svm_feats <- renderPrint(paste(svm_feats(), collapse = ", "))
 
   ## Mzion compatibles
   max_protscores_co_new <- reactive({ if (is.na(max_protscores_co())) Inf else max_protscores_co() })
@@ -195,6 +204,12 @@ app_server <- function(input, output, session)
     nums <- extract_nums(ms1_notches())
     nums <- if (length(nums) && is.numeric(nums)) nums else 0
   })
+
+  ## Tools
+  add_unimodServer("add_unimod")
+  remove_unimodServer("remove_unimod")
+  find_unimodServer("find_unimod")
+  map_ms2Server("map_ms2ions")
 
   ## mzion::matchMS parameters
   pars <- reactive({
@@ -278,11 +293,9 @@ app_server <- function(input, output, session)
       # add_ms2moverzs = FALSE,
       # add_ms2ints = FALSE,
 
-      svm_reproc = svm_reproc()
-      # svm_kernel = "radial",
-      # svm_feats = c("pep_score", "pep_ret_range", "pep_delta", "pep_n_ms2",
-      #               "pep_expect", "pep_exp_mz", "pep_exp_mr", "pep_tot_int",
-      #               "pep_n_matches2", "pep_ms2_deltas_mean"),
+      svm_reproc = svm_reproc(),
+      svm_kernel = svm_kernel(),
+      svm_feats = svm_feats()
       # svm_cv = TRUE,
       # svm_k = 3L,
       # svm_costs = c(0.1, 0.3, 1, 3, 10),
@@ -359,11 +372,11 @@ app_server <- function(input, output, session)
 
       ## MGF
       # if out_path changed -> cached_pars not found...
-      updateTextInput(session, NS("mgf", "out_path"), "Output path", value = cached_pars()$out_path,
+      updateTextInput(session, NS("mgf", "out_path"), NULL, value = cached_pars()$out_path,
                       placeholder = file.path("~/Mzion/My_Project"))
-      updateTextInput(session, NS("mgf", "mgf_path"), "MGF path", value = cached_pars()$mgf_path,
+      updateTextInput(session, NS("mgf", "mgf_path"), NULL, value = cached_pars()$mgf_path,
                       placeholder = "~/Mzion/My_project/mgf")
-      updateTextInput(session, NS("mgf", ".path_cache"), "Default cache folder",
+      updateTextInput(session, NS("mgf", ".path_cache"), NULL,
                       value = cached_pars()$.path_cache)
       updateNumericInput(session, NS("mgf", "min_ms1_charge"), "Min MS1 charge state",
                          value = cached_pars()$min_ms1_charge)
@@ -455,7 +468,6 @@ app_server <- function(input, output, session)
                         c("by", "ax", "cz"), selected = cached_pars()$type_ms2ions)
       updateSelectInput(session, NS("search", "enzyme"), "Enzyme", enzymes, selected = cached_pars()$enzyme)
       updateCheckboxInput(session, NS("search", "customenzyme"), "Custom enzyme", value = cached_pars()$customenzyme)
-      # no update? the same as fasta need to load the parameter file twice
       updateNumericInput(session, NS("search", "noenzyme_maxn"),
                          paste0("Max number of peptide lengths for a section ",
                                 "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
@@ -484,6 +496,30 @@ app_server <- function(input, output, session)
       updateNumericInput(session, NS("fdr", "topn_seqs_per_query"), "Top-N sequences per query",
                          value = cached_pars()$topn_seqs_per_query, min = 1)
       updateCheckboxInput(session, NS("fdr", "svm_reproc"), "Percolator", value = cached_pars()$svm_reproc)
+      updateSelectInput(session, NS("fdr", "svm_kernel"), "SVM kernel", c("radial", "linear"), selected = cached_pars()$svm_kernel)
+
+      svm_feats <- cached_pars()$svm_feats
+      use_pep_score <- if ("pep_score" %in% svm_feats) TRUE else FALSE
+      use_pep_ret_range <- if ("pep_ret_range" %in% svm_feats) TRUE else FALSE
+      use_pep_delta <- if ("pep_delta" %in% svm_feats) TRUE else FALSE
+      use_pep_n_ms2 <- if ("pep_n_ms2" %in% svm_feats) TRUE else FALSE
+      use_pep_expect <- if ("pep_expect" %in% svm_feats) TRUE else FALSE
+      use_pep_exp_mz <- if ("pep_exp_mz" %in% svm_feats) TRUE else FALSE
+      use_pep_exp_mr <- if ("pep_exp_mr" %in% svm_feats) TRUE else FALSE
+      use_pep_tot_int <- if ("pep_tot_int" %in% svm_feats) TRUE else FALSE
+      use_pep_n_matches2 <- if ("pep_n_matches2" %in% svm_feats) TRUE else FALSE
+      use_pep_ms2_deltas_mean <- if ("pep_ms2_deltas_mean" %in% svm_feats) TRUE else FALSE
+
+      updateCheckboxInput(session, NS("fdr", "use_pep_score"), "Peptide score", value = use_pep_score)
+      updateCheckboxInput(session, NS("fdr", "use_pep_ret_range"), "Retention time", value = use_pep_ret_range)
+      updateCheckboxInput(session, NS("fdr", "use_pep_delta"), "MS1 mass error", value = use_pep_delta)
+      updateCheckboxInput(session, NS("fdr", "use_pep_n_ms2"), "Number of MS2 features", value = use_pep_n_ms2)
+      updateCheckboxInput(session, NS("fdr", "use_pep_expect"), "Peptide expectation", value = use_pep_expect)
+      updateCheckboxInput(session, NS("fdr", "use_pep_exp_mz"), "Experimental m/z", value = use_pep_exp_mz)
+      updateCheckboxInput(session, NS("fdr", "use_pep_exp_mr"), "Experimental molecular weight", value = use_pep_exp_mr)
+      updateCheckboxInput(session, NS("fdr", "use_pep_tot_int"), "Precursor intensity", value = use_pep_tot_int)
+      updateCheckboxInput(session, NS("fdr", "use_pep_n_matches2"), "Number of secondary features", value = use_pep_n_matches2)
+      updateCheckboxInput(session, NS("fdr", "use_pep_ms2_deltas_mean"), "Mean MS2 mass error", value = use_pep_ms2_deltas_mean)
 
       ## quantitation
       updateSelectInput(session, NS("quant", "quant"), "Quantitation",
@@ -506,9 +542,7 @@ app_server <- function(input, output, session)
     print(pars())
     sink()
 
-    if (!file.exists(fi_pars <- file.path(out_path(), "mz.pars")))
-      saveRDS(pars(), fi_pars)
-
+    saveRDS(pars(), file.path(out_path(), "mz.pars"))
     do.call(mzion::matchMS, pars())
     shinyjs::toggleState("submit")
   })

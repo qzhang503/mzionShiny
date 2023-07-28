@@ -11,17 +11,14 @@ short_mods <- c("Carbamidomethyl (Anywhere = C)",
                 "TMT11plex (Anywhere = K)", "TMT11plex (Any N-term = N-term)",
                 "TMT16plex (Anywhere = K)", "TMT16plex (Any N-term = N-term)",
                 "TMT18plex (Anywhere = K)", "TMT18plex (Any N-term = N-term)")
-# short_mods <- gsub("->", "-&gt;", short_mods, fixed = TRUE)
 
-umods <- system.file("extdata", "unimods.txt", package = "mzionShiny") |>
-  vroom::vroom(show_col_types = FALSE) |>
+# table_unimods()
+umods <- mzion::table_unimods() |>
   dplyr::mutate(modification = paste0(title, " (", position, " = ", site, ")")) |>
-  dplyr::mutate(short = ifelse(modification %in% short_mods, TRUE, FALSE)) # |>
-  # dplyr::mutate(modification = gsub("->", "-&gt;", modification, fixed = TRUE))
+  dplyr::mutate(short = ifelse(modification %in% short_mods, TRUE, FALSE))
 
 umods_short <- umods |> dplyr::filter(short) # used in modification.R
-
-umods_labs <- umods |> dplyr::filter(grepl("^Label:", title))
+umods_labs  <- umods |> dplyr::filter(grepl("^Label:", title))
 
 enzymes <- c("Trypsin_P", "Trypsin", "LysC", "LysN", "ArgC", "LysC_P",
              "Chymotrypsin", "GluC", "GluN", "AspC", "AspN", "SemiTrypsin_P",
