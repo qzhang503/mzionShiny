@@ -128,6 +128,7 @@ fastaUI <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_acc"
                textInput(NS(id, "acc_pattern_1"), "Accession pattern 1"), NULL),
       ),
     ),
+    br(),
     fluidRow(
       column(8,
              shinyFiles::shinyFilesButton(NS(id, "select_2"), "Select a FASTA file", "Select Files",
@@ -141,6 +142,7 @@ fastaUI <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_acc"
                textInput(NS(id, "acc_pattern_2"), "Accession pattern 2"), NULL),
       ),
     ),
+    br(),
     fluidRow(
       column(8,
              shinyFiles::shinyFilesButton(NS(id, "select_3"), "Select a FASTA file", "Select Files",
@@ -154,6 +156,7 @@ fastaUI <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_acc"
                textInput(NS(id, "acc_pattern_3"), "Accession pattern 3"), NULL),
       ),
     ),
+    br(),
     fluidRow(
       column(8,
              shinyFiles::shinyFilesButton(NS(id, "select_4"), "Select a FASTA file", "Select Files",
@@ -167,6 +170,7 @@ fastaUI <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_acc"
                textInput(NS(id, "acc_pattern_4"), "Accession pattern 4"), NULL),
       ),
     ),
+    br(),
   )
 }
 

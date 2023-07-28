@@ -9,8 +9,7 @@ map_ms2UI <- function(id, type_ms2ions = c("by", "ax", "cz"))
   sidebarLayout(
     sidebarPanel(
       shinyFiles::shinyFilesButton(NS(id, "btn_file"), "Select a PSM file", "Select Files",
-                                   filetype = list(text = "txt"), multiple = FALSE,
-                                   style = "background-color: #f5f5f5"),
+                                   multiple = FALSE,style = "background-color: #f5f5f5"),
       textInput(NS(id, "in_name"), NULL, value = "", placeholder = "~/Mzion/Project/psmQ.txt"),
       uiOutput(NS(id, "raws")),
       numericInput(NS(id, "scan"), "Scan number", 1),
@@ -27,6 +26,7 @@ map_ms2UI <- function(id, type_ms2ions = c("by", "ax", "cz"))
       width = 4
     ),
     mainPanel(
+      DT::DTOutput(NS(id, "table")),
       plotOutput(NS(id, "plot")),
       width = 8
     )
@@ -38,7 +38,10 @@ map_ms2UI <- function(id, type_ms2ions = c("by", "ax", "cz"))
 #'
 #' @param id Namespace identifier.
 #' @param type_ms2ions Type of MS2 ions.
-map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"))
+#' @param cols PSM columns for displaying.
+map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"),
+                          cols = c("prot_acc", "raw_file", "pep_seq", "pep_scan_num",
+                                   "pep_isdecoy", "pep_rank", "pep_score"))
 {
   moduleServer(
     id,
@@ -48,7 +51,8 @@ map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"))
 
       ## PSM
       observeEvent(input$btn_file, ignoreInit = TRUE, {
-        shinyFiles::shinyFileChoose(input, "btn_file", roots = volumes(), session = session)
+        shinyFiles::shinyFileChoose(input, "btn_file", roots = volumes(), session = session,
+                                    filetypes = c(text = "txt"))
         fileinfo <- shinyFiles::parseFilePaths(volumes(), input$btn_file)
         fileinfo$datapath <- gsub("\\\\", "/", fileinfo$datapath)
         updateTextInput(session = session, inputId = "in_name", label = NULL,
@@ -57,12 +61,19 @@ map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"))
 
       psms <- eventReactive(input$in_name, ignoreInit = TRUE, {
         if (file.exists(input$in_name))
-          readr::read_tsv(input$in_name, col_types = mzion::get_mzion_coltypes())
+          suppressWarnings(readr::read_tsv(input$in_name, col_types = mzion::get_mzion_coltypes()))
         else
           NULL
       })
 
       observeEvent(psms(), {
+        if (nrow(psms())) {
+          ok_cols <- cols[cols %in% names(psms())]
+          output$table <- DT::renderDT(psms()[, ok_cols], filter = "bottom",
+                                       options = list(pageLength = 5))
+
+        }
+
         if (length(raws <- unique(psms()$raw_file))) {
           output$raws <- renderUI({
             selectInput(NS(id, "raws"), "MS files", raws)

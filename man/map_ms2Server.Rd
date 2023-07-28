@@ -4,12 +4,19 @@
 \alias{map_ms2Server}
 \title{Server-side processing of MGF parameters}
 \usage{
-map_ms2Server(id, type_ms2ions = c("by", "ax", "cz"))
+map_ms2Server(
+  id,
+  type_ms2ions = c("by", "ax", "cz"),
+  cols = c("prot_acc", "raw_file", "pep_seq", "pep_scan_num", "pep_isdecoy", "pep_rank",
+    "pep_score")
+)
 }
 \arguments{
 \item{id}{Namespace identifier.}
 
 \item{type_ms2ions}{Type of MS2 ions.}
+
+\item{cols}{PSM columns for displaying.}
 }
 \description{
 Server-side processing of MGF parameters

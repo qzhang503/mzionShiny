@@ -14,7 +14,8 @@ Imports:
     readr,
     shiny (>= 1.7.4),
     shinyFiles,
-    shinyjs
+    shinyjs, 
+    DT
 Suggests: 
     knitr,
     rmarkdown,
