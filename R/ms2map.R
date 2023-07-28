@@ -76,7 +76,7 @@ map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"),
 
         if (length(raws <- unique(psms()$raw_file))) {
           output$raws <- renderUI({
-            selectInput(NS(id, "raws"), "MS files", raws)
+            selectInput(NS(id, "raws"), "MS files", sort(raws))
           })
         }
       })
