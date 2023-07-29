@@ -59,6 +59,8 @@ map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"),
                         value = unname(fileinfo$datapath ))
       })
 
+      raw_files <- reactiveVal(NULL)
+
       psms <- eventReactive(input$in_name, ignoreInit = TRUE, {
         if (file.exists(input$in_name))
           suppressWarnings(readr::read_tsv(input$in_name, col_types = mzion::get_mzion_coltypes()))
@@ -70,13 +72,15 @@ map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"),
         if (nrow(psms())) {
           ok_cols <- cols[cols %in% names(psms())]
           output$table <- DT::renderDT(psms()[, ok_cols], filter = "bottom",
+                                       selection = "single",
                                        options = list(pageLength = 5))
-
         }
 
-        if (length(raws <- unique(psms()$raw_file))) {
+        if (length(raws <- sort(unique(psms()$raw_file)))) {
+          raw_files(raws)
+
           output$raws <- renderUI({
-            selectInput(NS(id, "raws"), "MS files", sort(raws))
+            selectInput(NS(id, "raws"), "MS files", raws)
           })
         }
       })
@@ -93,6 +97,17 @@ map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"),
         shinyjs::toggleState("view")
 
         ans
+      })
+
+      observeEvent(input$table_rows_selected, {
+        # single row guaranteed by selection = "single"
+        if (!is.null(i <- input$table_rows_selected)) {
+          row <- psms()[i, , drop = FALSE]
+          updateSelectInput(session, "raws", label = NULL, choices = raw_files(), selected = row$raw_file)
+          updateNumericInput(session, "scan", NULL, row$pep_scan_num)
+          updateNumericInput(session, "rank", NULL, row$pep_rank)
+          updateCheckboxInput(session, "is_decoy", NULL, row$pep_isdecoy)
+        }
       })
 
       output$plot <- renderPlot(btn_view()$p)
