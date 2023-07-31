@@ -11,32 +11,32 @@ add_unimodUI <- function(id,
                      positions = c("Anywhere", "Any N-term", "Protein N-term",
                                    "Any C-term", "Protein C-term"))
 {
-  ns <- NS(id)
-
-  tagList(
-    fluidRow(
-      column(4, textInput(NS(id, "title"), label = "Title (do-not-use-space)",
-                           placeholder = "TMT10plexNterm+Gln->pyro-Glu"),),
-      column(4, textInput(NS(id, "full_name"), label = "Description",
-                           placeholder = "Additive N-term TMT10 and Gln->pyro-Glu"),),
-      column(4, textInput(NS(id, "composition"), label = "Composition",
-                           placeholder = "H(17) C(8) 13C(4) 15N O(2)"),),
+  sidebarLayout(
+    sidebarPanel(
+      fluidRow(
+        textInput(NS(id, "title"), label = "Title (do-not-use-space)",
+                  placeholder = "TMT10plexNterm+Gln->pyro-Glu"),
+        textInput(NS(id, "full_name"), label = "Description",
+                  placeholder = "Additive N-term TMT10 and Gln->pyro-Glu"),
+        textInput(NS(id, "composition"), label = "Composition",
+                  placeholder = "H(17) C(8) 13C(4) 15N O(2)"),
+      ),
+      fluidRow(
+        selectInput(NS(id, "site"), "Site", sites, selected = NULL, multiple = FALSE),
+        selectInput(NS(id, "position"), "Position", positions, selected = NULL, multiple = FALSE),
+        textInput(NS(id, "neuloss"), label = "Neutral loss", placeholder = "H(4) C O S"),
+      ),
+      fluidRow(
+        actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries."),
+        actionButton(NS(id, "add"),  "Add",  class = "btn-success", title = "Adds a Unimod entry"),
+      ),
+      textOutput(NS(id, "msg")),
+      width = 4
     ),
-    fluidRow(
-      column(4, selectInput(NS(id, "site"), "Site", sites, selected = NULL, multiple = FALSE)),
-      column(4, selectInput(NS(id, "position"), "Position", positions, selected = NULL, multiple = FALSE)),
-      column(4, textInput(NS(id, "neuloss"), label = "Neutral loss",
-                          placeholder = "H(4) C O S"),),
-    ),
-    fluidRow(
-      column(4, actionButton(NS(id, "add"), "Add", class = "btn-success",
-                             title = "Calculates the mass of a chemical formula"),),
-    ),
-    fluidRow(
-      h2(""),
-      column(12, dataTableOutput(NS(id, "umods")),),
-      column(4, actionButton(NS(id, "reload"), "Reload", class = "btn-success"),),
-    ),
+    mainPanel(
+      DT::DTOutput(NS(id, "table")),
+      width = 8
+    )
   )
 }
 
@@ -49,37 +49,71 @@ add_unimodServer <- function(id)
   moduleServer(
     id,
     function(input, output, session) {
-      if (length(excls <- which(names(umods) %in% c("modification", "short"))))
-        umods <- umods[, -excls, drop = FALSE]
+      umods <- reactiveVal()
 
-      umods <- umods |>
-        dplyr::rename(Title = title, Description = full_name, Site = site,
-                      Position = position, Mono_mass = mono_masses,
-                      Composition = composition)
-
-      output$umods <- renderDataTable(umods, options = list(pageLength = 5))
-
-      observeEvent(input$add, {
-        m0 <- mzion::calc_unimod_compmass(input$composition)
-        m1 <- mzion::calc_unimod_compmass(input$neuloss)
-
-        if (input$title != "") {
-          x <- mzion::add_unimod(header      = c(title       = input$title,
-                                                 full_name   = input$full_name),
-                                 specificity = c(site        = input$site,
-                                                 position    = input$position),
-                                 delta       = c(mono_mass   = as.character(m0$mono_mass),
-                                                 avge_mass   = as.character(m0$avge_mass),
-                                                 composition = input$composition),
-                                 neuloss     = c(mono_mass   = as.character(m1$mono_mass),
-                                                 avge_mass   = as.character(m1$avge_mass),
-                                                 composition = input$neuloss))
+      observeEvent(input$table_rows_selected, {
+        if (!is.null(i <- input$table_rows_selected)) {
+          # stopifnot(length(i) == 1L)
+          row <- umods()[i, , drop = FALSE]
+          updateTextInput(session, "title", NULL, value = row$title)
+          updateTextInput(session, "full_name", NULL, value = row$full_name)
+          updateTextInput(session, "composition", NULL, value = row$composition)
+          updateSelectInput(session, "site", label = NULL, choices = NULL, selected = row$site)
+          updateSelectInput(session, "position", label = NULL, choices = NULL, selected = row$position)
+          updateTextInput(session, "neuloss", NULL, value = row$neuloss)
         }
       })
 
-      observeEvent(input$reload, {
-        umods <- mzion::table_unimods()
-        output$umods <- renderDataTable(umods, options = list(pageLength = 5))
+      observeEvent(input$add, {
+        if (input$neuloss == "") {
+          m1 <- list(mono_mass = "0", avge_mass = "0")
+          nl <- "0"
+        }
+        else {
+          m1 <- tryCatch(mzion::calc_unimod_compmass(input$neuloss), error = function(e) NULL)
+          nl <- input$neuloss
+
+          if (is.null(m1)) {
+            output$msg <- renderText(
+              paste0("Ignore Unimod neutral loss: ",input$neuloss, ". ",
+                     "Please check the formula."))
+            m1 <- list(mono_mass = "0", avge_mass = "0")
+            nl <- "0"
+          }
+        }
+
+        m0 <- tryCatch(mzion::calc_unimod_compmass(input$composition), error = function(e) NULL)
+
+        if (is.null(m0)) {
+          output$msg <- renderText(
+            paste0("Cannot add Unimod: ",input$composition, ". ",
+                   "Please check the formula."))
+        }
+        else {
+          mzion::add_unimod(header      = c(title       = input$title,
+                                            full_name   = input$full_name),
+                            specificity = c(site        = input$site,
+                                            position    = input$position),
+                            delta       = c(mono_mass   = as.character(m0$mono_mass),
+                                            avge_mass   = as.character(m0$avge_mass),
+                                            composition = input$composition),
+                            neuloss     = c(mono_mass   = as.character(m1[["mono_mass"]]),
+                                            avge_mass   = as.character(m1[["avge_mass"]]),
+                                            composition = nl))
+
+          output$msg <- renderText(paste0("Unimod added: ", input$title, "."))
+          umods(mzion::table_unimods())
+          output$table <- DT::renderDT(umods(), filter = "bottom",
+                                       selection = "single",
+                                       options = list(pageLength = 5))
+        }
+      })
+
+      observeEvent(input$load, {
+        umods(mzion::table_unimods())
+        output$table <- DT::renderDT(umods(), filter = "bottom",
+                                     selection = "single",
+                                     options = list(pageLength = 5))
       })
     }
   )
@@ -99,25 +133,24 @@ remove_unimodUI <- function(id,
                             positions = c("Anywhere", "Any N-term", "Protein N-term",
                                           "Any C-term", "Protein C-term"))
 {
-  ns <- NS(id)
-
-  tagList(
-    fluidRow(
-      column(4, textInput(NS(id, "title"), label = "Title",
-                           placeholder = "TMT10plexNterm+Gln->pyro-Glu"),),
-      column(4, selectInput(NS(id, "site"), "Site", sites, selected = NULL, multiple = FALSE)),
-      column(4, selectInput(NS(id, "position"), "Position", positions, selected = NULL, multiple = FALSE)),
-
+  sidebarLayout(
+    sidebarPanel(
+      fluidRow(
+        textInput(NS(id, "title"), label = "Title", placeholder = "TMT10plexNterm+Gln->pyro-Glu"),
+        selectInput(NS(id, "site"), "Site", sites, selected = NULL, multiple = FALSE),
+        selectInput(NS(id, "position"), "Position", positions, selected = NULL, multiple = FALSE),
+      ),
+      fluidRow(
+        actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries."),
+        actionButton(NS(id, "remove"), "Remove", class = "btn-danger", title = "Removes a Unimod entry"),
+      ),
+      textOutput(NS(id, "msg")),
+      width = 4
     ),
-    fluidRow(
-      column(4, actionButton(NS(id, "remove"), "Remove", class = "btn-danger",
-                              title = "Calculates the mass of a chemical formula"),),
-    ),
-    fluidRow(
-      h2(""),
-      dataTableOutput(NS(id, "umods")),
-      column(12, actionButton(NS(id, "reload"), "Reload", class = "btn-success"),),
-    ),
+    mainPanel(
+      DT::DTOutput(NS(id, "table")),
+      width = 8
+    )
   )
 }
 
@@ -130,27 +163,35 @@ remove_unimodServer <- function(id)
   moduleServer(
     id,
     function(input, output, session) {
-      if (length(excls <- which(names(umods) %in% c("modification", "short"))))
-        umods <- umods[, -excls, drop = FALSE]
+      umods <- reactiveVal()
 
-      umods <- umods |>
-        dplyr::rename(Title = title, Description = full_name, Site = site,
-                      Position = position, Mono_mass = mono_masses,
-                      Composition = composition)
-
-      output$umods <- renderDataTable(umods, options = list(pageLength = 5))
-
-      observeEvent(input$remove, {
-        if (input$title != "") {
-          x <- mzion::remove_unimod(header      = c(title       = input$title),
-                                    specificity = c(site        = input$site,
-                                                    position    = input$position))
+      observeEvent(input$table_rows_selected, {
+        if (!is.null(i <- input$table_rows_selected)) {
+          # stopifnot(length(i) == 1L)
+          row <- umods()[i, , drop = FALSE]
+          updateTextInput(session, "title", NULL, value = row$title)
+          updateTextInput(session, "site", NULL, value = row$site)
+          updateTextInput(session, "position", NULL, value = row$position)
         }
       })
 
-      observeEvent(input$reload, {
-        umods <- mzion::table_unimods()
-        output$umods <- renderDataTable(umods, options = list(pageLength = 5))
+      observeEvent(input$remove, {
+        mzion::remove_unimod(header      = c(title       = input$title),
+                             specificity = c(site        = input$site,
+                                             position    = input$position))
+
+        output$msg <- renderText(paste0("Unimod removed: ", input$title, "."))
+        umods(mzion::table_unimods())
+        output$table <- DT::renderDT(umods(), filter = "bottom",
+                                     selection = "single",
+                                     options = list(pageLength = 5))
+      })
+
+      observeEvent(input$load, {
+        umods(mzion::table_unimods())
+        output$table <- DT::renderDT(umods(), filter = "bottom",
+                                     selection = "single",
+                                     options = list(pageLength = 5))
       })
     }
   )
@@ -159,24 +200,29 @@ remove_unimodServer <- function(id)
 
 #' User interface of MGF parameters
 #'
+#' Find (neutral losses of) a Unimod.
+#'
 #' @param id Namespace identifier.
 find_unimodUI <- function(id)
 {
-  ns <- NS(id)
-
-  tagList(
-    fluidRow(
-      column(4, textInput(NS(id, "unimod"), label = "Unimod",
-                          placeholder = "Phospho (S)"),),
+  sidebarLayout(
+    sidebarPanel(
+      fluidRow(
+        textInput(NS(id, "unimod"), label = "Unimod",
+                  placeholder = "Phospho (S)"),
+        actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries."),
+        actionButton(NS(id, "find"), "Find", class = "btn-success",
+                     title = "Finds a Unimod and applicable neutral losses"),
+        h2(""),
+        tableOutput(NS(id, "umod"))
+      ),
+      textOutput(NS(id, "msg")),
+      width = 4
     ),
-    fluidRow(
-      column(4, actionButton(NS(id, "find"), "Find", class = "btn-success",
-                             title = "Finds a Unimod and applicable neutral losses"),),
-    ),
-    fluidRow(
-      h2(""),
-      column(12, tableOutput(NS(id, "umod"))),
-    ),
+    mainPanel(
+      DT::DTOutput(NS(id, "table")),
+      width = 8
+    )
   )
 }
 
@@ -189,18 +235,44 @@ find_unimodServer <- function(id)
   moduleServer(
     id,
     function(input, output, session) {
-      umod <- eventReactive(input$find, {
-        if (input$unimod != "") {
-          x <- mzion::find_unimod(unimod = input$unimod)
-          x <- suppressWarnings(data.frame(x)) # uneven lengths of x
-          x$monomass <- as.character(x$monomass)
-          x$nl <- as.character(x$nl)
-          x
+      umods <- reactiveVal()
+
+      observeEvent(input$table_rows_selected, {
+        if (!is.null(i <- input$table_rows_selected)) {
+          # stopifnot(length(i) == 1L)
+          row <- umods()[i, , drop = FALSE]
+          updateTextInput(session, "unimod", NULL, value = row$modification)
         }
       })
 
+      umod <- eventReactive(input$find, {
+        x <- tryCatch(mzion::find_unimod(unimod = input$unimod),
+                 error = function(e) NULL)
+
+        if (is.null(x)) {
+          output$msg <- renderText(paste0("Unimod not found: ", input$unimod, "."))
+        }
+        else {
+          x <- suppressWarnings(data.frame(x)) # uneven lengths of x
+          x$monomass <- as.character(x$monomass)
+          x$nl <- as.character(x$nl)
+          x <- dplyr::rename(x, mono_mass = monomass, site = position_site)
+        }
+
+        x
+      })
       output$umod <- renderTable(umod())
+
+      observeEvent(input$load, {
+        umods(mzion::table_unimods() |>
+                dplyr::mutate(modification = paste0(title, " (", position, " = ", site, ")")))
+
+        output$table <- DT::renderDT(umods(), filter = "bottom",
+                                     selection = "single",
+                                     options = list(pageLength = 5))
+      })
     }
   )
 }
+
 

@@ -522,14 +522,14 @@ app_server <- function(input, output, session)
       updateCheckboxInput(session, NS("fdr", "use_pep_ms2_deltas_mean"), "Mean MS2 mass error", value = use_pep_ms2_deltas_mean)
 
       ## quantitation
-      updateSelectInput(session, NS("quant", "quant"), "Quantitation",
+      updateSelectInput(session, NS("mgf", "quant"), "Quantitation",
                         choices = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt18"),
                         selected = cached_pars()$quant)
-      updateNumericInput(session, NS("quant", "ppm_reporters"), "Reporter tolerance (ppm)",
+      updateNumericInput(session, NS("mgf", "ppm_reporters"), "Reporter tolerance (ppm)",
                          value = cached_pars()$ppm_reporters, min = 1)
-      updateNumericInput(session, NS("quant", "tmt_reporter_lower"), "Reporter lower bound",
+      updateNumericInput(session, NS("mgf", "tmt_reporter_lower"), "Reporter lower bound",
                          value = cached_pars()$tmt_reporter_lower, min = 0)
-      updateNumericInput(session, NS("quant", "tmt_reporter_upper"), "Reporter upper bound",
+      updateNumericInput(session, NS("mgf", "tmt_reporter_upper"), "Reporter upper bound",
                          value = cached_pars()$tmt_reporter_upper, min = 0)
     }
   })

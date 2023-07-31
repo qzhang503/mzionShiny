@@ -1,6 +1,6 @@
 Package: mzionShiny
 Title: Mzion App
-Version: 1.0.1
+Version: 1.0.1.2
 Authors@R: 
     person("Qiang", "Zhang", , "qzhang503@gmail.com", role = c("aut", "cre"))
 Description: Shiny app of Mzion proteomics database search engine

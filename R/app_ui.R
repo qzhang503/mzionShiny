@@ -17,32 +17,13 @@ app_ui <- function(request) {
 
     # titlePanel("DDA"),
 
-    fixedRow(
-      align = "center",
-      br(),
-      column(
-        1,
-        splitLayout(cellWidths = 70,
-                    shinyFiles::shinyFilesButton("loadpars", "Reload", "Please select a file",
-                                                 filetype = list(text = "pars"), multiple = FALSE,
-                                                 viewtype = "detail",
-                                                 style = "background-color:#43a2ca; width:70px; font-size:100%; color:white"),
-                    shinyFiles::shinySaveButton("savepars", "Save", "Save file",
-                                                filetype = list(text = "pars"), viewtype = "icon",
-                                                style = "background-color:#43a2ca; width:70px; font-size:100%; color:white"),
-                    actionButton("submit", "Submit", style = "background-color:#41ab5d; width:70px;
-                             font-size:100%; color:white"),
-                    actionButton("cancel", "Cancel", style = "background-color:#a50f15; width:70px;
-                             font-size:100%; color:white"),
-        )
-      ),
-    ),
-    br(),
-
     navbarPage(
       # shinyjs::useShinyjs(),
       # theme = bslib::bs_theme(bootswatch = "cerulean"),
-      "Mzion",
+      title = a("Mzion", href = "https://github.com/qzhang503/mzion/"),
+      # title = "Mzion",
+      id = "Mzion",
+
       tabPanel(
         "Peaks",
         mgfUI("mgf"),
@@ -136,6 +117,32 @@ app_ui <- function(request) {
         # textOutput("topn_seqs_per_query"),
         # textOutput("svm_reproc"),
       ),
+
+      tabPanel(
+        "Exec",
+        fixedRow(
+          align = "center",
+          column(
+            1,
+            splitLayout(cellWidths = 70,
+                        shinyFiles::shinyFilesButton("loadpars", "Reload", "Please select a file",
+                                                     filetype = list(text = "pars"), multiple = FALSE,
+                                                     viewtype = "detail",
+                                                     style = "background-color:#43a2ca; width:70px;
+                                                     font-size:100%; color:white"),
+                        shinyFiles::shinySaveButton("savepars", "Save", "Save file",
+                                                    filetype = list(text = "pars"), viewtype = "icon",
+                                                    style = "background-color:#43a2ca; width:70px;
+                                                    font-size:100%; color:white"),
+                        actionButton("submit", "Submit", style = "background-color:#41ab5d; width:70px;
+                             font-size:100%; color:white"),
+                        actionButton("cancel", "Cancel", style = "background-color:#a50f15; width:70px;
+                             font-size:100%; color:white"),
+            )
+          ),
+        ),
+      ),
+
       navbarMenu("Tools",
                  tabPanel(
                    "Add Unimod",
@@ -146,14 +153,37 @@ app_ui <- function(request) {
                    remove_unimodUI("remove_unimod"),
                  ),
                  tabPanel(
-                   "Find Unimod",
+                   "Find Unimod (NL)",
                    find_unimodUI("find_unimod"),
                  ),
                  tabPanel(
                    "View PSM",
                    map_ms2UI("map_ms2ions"),
                  ),
+                 icon = icon("wrench"),
       ),
+      ###
+      # footer = fixedRow(
+      #   align = "center",
+      #   br(),
+      #   column(
+      #     1,
+      #     splitLayout(cellWidths = 70,
+      #                 shinyFiles::shinyFilesButton("loadpars", "Reload", "Please select a file",
+      #                                              filetype = list(text = "pars"), multiple = FALSE,
+      #                                              viewtype = "detail",
+      #                                              style = "background-color:#43a2ca; width:70px; font-size:100%; color:white"),
+      #                 shinyFiles::shinySaveButton("savepars", "Save", "Save file",
+      #                                             filetype = list(text = "pars"), viewtype = "icon",
+      #                                             style = "background-color:#43a2ca; width:70px; font-size:100%; color:white"),
+      #                 actionButton("submit", "Submit", style = "background-color:#41ab5d; width:70px;
+      #                              font-size:100%; color:white"),
+      #                 actionButton("cancel", "Cancel", style = "background-color:#a50f15; width:70px;
+      #                              font-size:100%; color:white"),
+      #     )
+      #   ),
+      # ),
+      ###
     ),
   )
 }

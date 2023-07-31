@@ -10,5 +10,5 @@ find_unimodUI(id)
 \item{id}{Namespace identifier.}
 }
 \description{
-User interface of MGF parameters
+Find (neutral losses of) a Unimod.
 }
