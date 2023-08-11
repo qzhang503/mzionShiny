@@ -8,6 +8,10 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
 
   tagList(
     fluidRow(
+      column(4, selectInput(NS(id, "quant"), "Quantitation", quant, selected = "none")),
+    ),
+    uiOutput(NS(id, "tmt")),
+    fluidRow(
       column(4, shinyFiles::shinyDirButton(NS(id, "select_outpath"), "Output path", "Please select a folder",
                                            style = "background-color: #f5f5f5")),
       column(12, textInput(NS(id, "out_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project"))),
@@ -43,10 +47,6 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       textInput(NS(id, "topn_ms2ion_cuts"), "Cuts (m/z = percent)", value = NA,
                 placeholder = "`1000` = 90, `1100` = 5, `4500` = 5"),
     ),
-    fluidRow(
-      column(4, selectInput(NS(id, "quant"), "Quantitation", quant, selected = "none")),
-    ),
-    uiOutput(NS(id, "tmt")),
     actionButton(NS(id, "reset"), "Reset",
                  style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
                  title = "Reset values in the current tab"),

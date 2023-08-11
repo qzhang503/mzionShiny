@@ -102,10 +102,8 @@ add_unimodServer <- function(id)
                                             composition = nl))
 
           output$msg <- renderText(paste0("Unimod added: ", input$title, "."))
-          umods(mzion::table_unimods())
-          output$table <- DT::renderDT(umods(), filter = "bottom",
-                                       selection = "single",
-                                       options = list(pageLength = 5))
+          # umods(mzion::table_unimods())
+          # output$table <- DT::renderDT(umods(), filter = "bottom", selection = "single", options = list(pageLength = 5))
         }
       })
 
@@ -181,10 +179,8 @@ remove_unimodServer <- function(id)
                                              position    = input$position))
 
         output$msg <- renderText(paste0("Unimod removed: ", input$title, "."))
-        umods(mzion::table_unimods())
-        output$table <- DT::renderDT(umods(), filter = "bottom",
-                                     selection = "single",
-                                     options = list(pageLength = 5))
+        # umods(mzion::table_unimods())
+        # output$table <- DT::renderDT(umods(), filter = "bottom", selection = "single", options = list(pageLength = 5))
       })
 
       observeEvent(input$load, {

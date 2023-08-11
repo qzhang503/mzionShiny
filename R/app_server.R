@@ -410,7 +410,9 @@ app_server <- function(input, output, session)
       updateSelectInput(session, NS("mod", "locmods"), "Localizations",
                         choices, selected = cached_pars()$locmods)
       updateSliderInput(session, NS("mod", "n_13c"), "Numbers of 13C",
-                        value = cached_pars()$n_13c, min = -1, max = 3)
+                        value = c(cached_pars()$n_13c[1],
+                                  cached_pars()$n_13c[length(cached_pars()$n_13c)]),
+                          min = -1, max = 3)
       updateCheckboxInput(session, NS("mod", "rm_dup_term_anywhere"),
                           paste0("Remove the same-site combinations at both terminal and anywhere positions ",
                                  "(e.g., N-term Q and Anywhere Q)"),
