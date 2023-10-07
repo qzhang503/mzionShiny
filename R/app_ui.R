@@ -117,7 +117,6 @@ app_ui <- function(request) {
         # textOutput("topn_seqs_per_query"),
         # textOutput("svm_reproc"),
       ),
-
       tabPanel(
         "Exec",
         fixedRow(
@@ -142,7 +141,6 @@ app_ui <- function(request) {
           ),
         ),
       ),
-
       navbarMenu("Tools",
                  tabPanel(
                    "Add Unimod",

@@ -90,6 +90,14 @@ app_server <- function(input, output, session)
   ppm_reporters <- mgfs$ppm_reporters
   tmt_reporter_lower <- mgfs$tmt_reporter_lower
   tmt_reporter_upper <- mgfs$tmt_reporter_upper
+  deisotope_ms2 <- mgfs$deisotope_ms2
+  max_ms2_charge <- mgfs$max_ms2_charge
+  is_mdda <- mgfs$is_mdda
+  use_defpeaks <- mgfs$use_defpeaks
+  ppm_ms1_deisotope <- mgfs$ppm_ms1_deisotope
+  ppm_ms2_deisotope <- mgfs$ppm_ms2_deisotope
+  n_mdda_flanks <- mgfs$n_mdda_flanks
+  maxn_mdda_precurs <- mgfs$maxn_mdda_precurs
   # output$quant <- renderPrint(paste0("quant: ", quant() ))
   # output$ppm_reporters <- renderPrint(paste0("ppm_reporters: ", ppm_reporters() ))
   # output$tmt_reporter_lower <- renderPrint(paste0("tmt_reporter_lower: ", tmt_reporter_lower() ))
@@ -275,6 +283,15 @@ app_server <- function(input, output, session)
       # combine_tier_three = FALSE,
       # max_n_prots = 60000L,
 
+      deisotope_ms2 = deisotope_ms2(),
+      max_ms2_charge = max_ms2_charge(),
+      is_mdda = is_mdda(),
+      use_defpeaks = use_defpeaks(),
+      ppm_ms1_deisotope = ppm_ms1_deisotope(),
+      ppm_ms2_deisotope = ppm_ms2_deisotope(),
+      n_mdda_flanks = n_mdda_flanks(),
+      maxn_mdda_precurs = maxn_mdda_precurs(),
+
       use_ms1_cache = use_ms1_cache(),
       .path_cache = .path_cache(),
       # .path_fasta = NULL,
@@ -389,6 +406,22 @@ app_server <- function(input, output, session)
       updateNumericInput(session, NS("mgf", "min_ret_time"), "Min retention time", value = cached_pars()$min_ret_time)
       updateNumericInput(session, NS("mgf", "max_ret_time"), "Max retention time", value = cached_pars()$max_ret_time)
       updateNumericInput(session, NS("mgf", "topn_ms2ions"), "Top-N features", value = cached_pars()$topn_ms2ions)
+      updateNumericInput(session, NS("mgf", "n_mdda_flanks"), "Number of flanking MS1 spectra",
+                         value = cached_pars()$n_mdda_flanks)
+      updateNumericInput(session, NS("mgf", "ppm_ms1_deisotope"), "MS1 tolerance (ppm)",
+                         value = cached_pars()$ppm_ms1_deisotope)
+      updateNumericInput(session, NS("mgf", "ppm_ms2_deisotope"), "MS2 tolerance (ppm)",
+                         value = cached_pars()$ppm_ms2_deisotope)
+      updateNumericInput(session, NS("mgf", "max_ms2_charge"), "Max MS2 charge state",
+                         value = cached_pars()$max_ms2_charge)
+      updateCheckboxInput(session, NS("mgf", "is_mdda"), "Chimeric precursors (mzML)",
+                          value = cached_pars()$is_mdda)
+      updateNumericInput(session, NS("mgf", "maxn_mdda_precurs"), "Number of precursors (1: DDA)",
+                         value = cached_pars()$maxn_mdda_precurs)
+      updateCheckboxInput(session, NS("mgf", "use_defpeaks"), "Use MSConvert defaults at undetermined precursors",
+                          value = cached_pars()$use_defpeaks)
+      updateCheckboxInput(session, NS("mgf", "deisotope_ms2"), "De-isotope MS2 spectra",
+                          value = cached_pars()$deisotope_ms2)
       updateCheckboxInput(session, NS("mgf", "exclude_reporter_region"), "Exclude reporter region",
                           value = cached_pars()$exclude_reporter_region)
       updateCheckboxInput(session, NS("mgf", "calib_ms1mass"), "Mass calibration", value = cached_pars()$calib_ms1mass)

@@ -22,19 +22,43 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
                                            style = "background-color: #f5f5f5")),
       column(12, textInput(NS(id, ".path_cache"), label = NULL, value = formals(mzion::matchMS)$.path_cache)),
     ),
+    # h4("Subsetting"),
+    # hr(),
     fluidRow(
       column(4, numericInput(NS(id, "min_ms1_charge"), "Min MS1 charge state", 2)),
-      column(4, numericInput(NS(id, "max_ms1_charge"), "Max MS1 charge state", 6)),
+      column(4, numericInput(NS(id, "max_ms1_charge"), "Max MS1 charge state", 4)),
       column(4, numericInput(NS(id, "min_ms2mass"), "Min MS2 mass", 115)),
       column(4, numericInput(NS(id, "max_ms2mass"), "Max MS2 mass", 4500)),
       column(4, numericInput(NS(id, "min_scan_num"), "Min scan number", 1)),
       column(4, numericInput(NS(id, "max_scan_num"), "Max scan number", Inf)),
       column(4, numericInput(NS(id, "min_ret_time"), "Min retention time", 0)),
       column(4, numericInput(NS(id, "max_ret_time"), "Max retention time", Inf)),
-      column(4, numericInput(NS(id, "topn_ms2ions"), "Top-N features", 100)),
-      column(4, checkboxInput(NS(id, "exclude_reporter_region"), "Exclude reporter region", value = FALSE)),
+      column(4, numericInput(NS(id, "topn_ms2ions"), "Top-N features", 150)),
     ),
-    checkboxInput(NS(id, "calib_ms1mass"), "Mass calibration"),
+    checkboxInput(NS(id, "deisotope_ms2"), "De-isotope MS2 spectra", value = TRUE),
+    conditionalPanel(
+      condition = "input.deisotope_ms2 == true",
+      ns = ns,
+      fluidRow(
+        column(4, numericInput(NS(id, "ppm_ms2_deisotope"), "MS2 tolerance (ppm)", 5, min = 1)),
+        column(4, numericInput(NS(id, "max_ms2_charge"), "Max MS2 charge state", 3, min = 2, max = 4)),
+      ),
+    ),
+    checkboxInput(NS(id, "is_mdda"), "Chimeric precursors (mzML)", value = FALSE),
+    conditionalPanel(
+      condition = "input.is_mdda == true",
+      ns = ns,
+      fluidRow(
+        column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 1)),
+        column(4, numericInput(NS(id, "ppm_ms1_deisotope"), "MS1 tolerance (ppm)", 5, min = 1)),
+        column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors (1: DDA)",
+                               5, min = 0)),
+        column(4, checkboxInput(NS(id, "use_defpeaks"),
+                                "Use MSConvert defaults at undetermined precursors", value = FALSE)),
+      ),
+    ),
+    hr(),
+    checkboxInput(NS(id, "calib_ms1mass"), "Calibrate masses"),
     conditionalPanel(
       condition = "input.calib_ms1mass == true",
       ns = ns,
@@ -47,6 +71,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       textInput(NS(id, "topn_ms2ion_cuts"), "Cuts (m/z = percent)", value = NA,
                 placeholder = "`1000` = 90, `1100` = 5, `4500` = 5"),
     ),
+    checkboxInput(NS(id, "exclude_reporter_region"), "Exclude reporter region", value = FALSE),
     actionButton(NS(id, "reset"), "Reset",
                  style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
                  title = "Reset values in the current tab"),
@@ -133,16 +158,26 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateTextInput(session, ".path_cache", NULL,
                         value = formals(mzion::matchMS)$.path_cache)
         updateNumericInput(session, "min_ms1_charge", "Min MS1 charge state", 2)
-        updateNumericInput(session, "max_ms1_charge", "Max MS1 charge state", 6)
+        updateNumericInput(session, "max_ms1_charge", "Max MS1 charge state", 4)
         updateNumericInput(session, "min_ms2mass", "Min MS2 mass", 115)
         updateNumericInput(session, "max_ms2mass", "Max MS2 mass", 4500)
         updateNumericInput(session, "min_scan_num", "Min scan number", 1)
         updateNumericInput(session, "max_scan_num", "Max scan number", Inf)
         updateNumericInput(session, "min_ret_time", "Min retention time", 0)
         updateNumericInput(session, "max_ret_time", "Max retention time", Inf)
-        updateNumericInput(session, "topn_ms2ions", "Top-N features", 100)
+        updateNumericInput(session, "topn_ms2ions", "Top-N features", 150)
+
+        updateNumericInput(session, "n_mdda_flanks", "Number of flanking MS1 spectra", 6)
+        updateNumericInput(session, "ppm_ms1_deisotope", "MS1 tolerance (ppm)", 5)
+        updateNumericInput(session, "ppm_ms2_deisotope", "MS2 tolerance (ppm)", 5)
+        updateNumericInput(session, "max_ms2_charge", "Max MS2 charge state", 3)
+        updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = FALSE)
+        updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (1: DDA)", 5)
+        updateCheckboxInput(session, "use_defpeaks",
+                            "Use MSConvert defaults at undetermined precursors", value = FALSE)
+        updateCheckboxInput(session, "deisotope_ms2", "De-isotope MS2 spectra", value = TRUE)
         updateCheckboxInput(session, "exclude_reporter_region", "Exclude reporter region", value = FALSE)
-        updateCheckboxInput(session, "calib_ms1mass", "Mass calibration", value = FALSE)
+        updateCheckboxInput(session, "calib_ms1mass", "Calibrate masses", value = FALSE)
         updateNumericInput(session, "ppm_ms1calib", "Calibration mass tolerance (ppm)", 10)
         updateCheckboxInput(session, "cut_ms2ions", "Cut MS2 by regions", value = FALSE)
         updateTextInput(session, "topn_ms2ion_cuts", "Cuts (m/z = percent)", value = NA,
@@ -152,6 +187,9 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateNumericInput(session, "tmt_reporter_lower", "Reporter lower bound", value = 126.1, min = 0)
         updateNumericInput(session, "tmt_reporter_upper", "Reporter upper bound", value = 135.2, min = 0)
       })
+
+      # deisotope_ms2 <- eventReactive(input$ppm_ms2_deisotope, if (input$ppm_ms2_deisotope > 0) TRUE else FALSE)
+      # is_mdda <- eventReactive(input$ppm_ms1_deisotope, if (input$ppm_ms1_deisotope > 0) TRUE else FALSE)
 
       list(mgf_path = reactive(input$mgf_path),
            min_ms1_charge = reactive(input$min_ms1_charge),
@@ -164,6 +202,15 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
            max_ret_time = reactive(input$max_ret_time),
            topn_ms2ions = reactive(input$topn_ms2ions),
            exclude_reporter_region = reactive(input$exclude_reporter_region),
+           # deisotope_ms2 = deisotope_ms2,
+           deisotope_ms2 = reactive(input$deisotope_ms2),
+           max_ms2_charge = reactive(input$max_ms2_charge),
+           is_mdda = reactive(input$is_mdda),
+           use_defpeaks = reactive(input$use_defpeaks),
+           ppm_ms1_deisotope = reactive(input$ppm_ms1_deisotope),
+           ppm_ms2_deisotope = reactive(input$ppm_ms2_deisotope),
+           n_mdda_flanks = reactive(input$n_mdda_flanks),
+           maxn_mdda_precurs = reactive(input$maxn_mdda_precurs),
            calib_ms1mass = reactive(input$calib_ms1mass),
            ppm_ms1calib = reactive(input$ppm_ms1calib),
            cut_ms2ions = reactive(input$cut_ms2ions),
