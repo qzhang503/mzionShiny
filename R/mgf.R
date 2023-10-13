@@ -44,6 +44,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
         column(4, numericInput(NS(id, "max_ms2_charge"), "Max MS2 charge state", 3, min = 2, max = 4)),
       ),
     ),
+    checkboxInput(NS(id, "reproc_dda_ms1"), "Reprocess DDA MS1 (mzML)", value = FALSE),
     checkboxInput(NS(id, "is_mdda"), "Chimeric precursors (mzML)", value = FALSE),
     conditionalPanel(
       condition = "input.is_mdda == true",
@@ -171,6 +172,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateNumericInput(session, "ppm_ms1_deisotope", "MS1 tolerance (ppm)", 5)
         updateNumericInput(session, "ppm_ms2_deisotope", "MS2 tolerance (ppm)", 5)
         updateNumericInput(session, "max_ms2_charge", "Max MS2 charge state", 3)
+        updateCheckboxInput(session, "reproc_dda_ms1", "Reprocess DDA MS1 (mzML)", value = FALSE)
         updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = FALSE)
         updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (1: DDA)", 5)
         updateCheckboxInput(session, "use_defpeaks",
@@ -205,6 +207,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
            # deisotope_ms2 = deisotope_ms2,
            deisotope_ms2 = reactive(input$deisotope_ms2),
            max_ms2_charge = reactive(input$max_ms2_charge),
+           reproc_dda_ms1 = reactive(input$reproc_dda_ms1),
            is_mdda = reactive(input$is_mdda),
            use_defpeaks = reactive(input$use_defpeaks),
            ppm_ms1_deisotope = reactive(input$ppm_ms1_deisotope),

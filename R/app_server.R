@@ -92,6 +92,7 @@ app_server <- function(input, output, session)
   tmt_reporter_upper <- mgfs$tmt_reporter_upper
   deisotope_ms2 <- mgfs$deisotope_ms2
   max_ms2_charge <- mgfs$max_ms2_charge
+  reproc_dda_ms1 <- mgfs$reproc_dda_ms1
   is_mdda <- mgfs$is_mdda
   use_defpeaks <- mgfs$use_defpeaks
   ppm_ms1_deisotope <- mgfs$ppm_ms1_deisotope
@@ -285,6 +286,7 @@ app_server <- function(input, output, session)
 
       deisotope_ms2 = deisotope_ms2(),
       max_ms2_charge = max_ms2_charge(),
+      reproc_dda_ms1 = reproc_dda_ms1(),
       is_mdda = is_mdda(),
       use_defpeaks = use_defpeaks(),
       ppm_ms1_deisotope = ppm_ms1_deisotope(),
@@ -414,6 +416,8 @@ app_server <- function(input, output, session)
                          value = cached_pars()$ppm_ms2_deisotope)
       updateNumericInput(session, NS("mgf", "max_ms2_charge"), "Max MS2 charge state",
                          value = cached_pars()$max_ms2_charge)
+      updateCheckboxInput(session, NS("mgf", "reproc_dda_ms1"), "Reprocess DDA MS1 (mzML)",
+                          value = cached_pars()$reproc_dda_ms1)
       updateCheckboxInput(session, NS("mgf", "is_mdda"), "Chimeric precursors (mzML)",
                           value = cached_pars()$is_mdda)
       updateNumericInput(session, NS("mgf", "maxn_mdda_precurs"), "Number of precursors (1: DDA)",
