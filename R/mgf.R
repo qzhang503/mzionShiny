@@ -40,7 +40,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       condition = "input.deisotope_ms2 == true",
       ns = ns,
       fluidRow(
-        column(4, numericInput(NS(id, "ppm_ms2_deisotope"), "MS2 tolerance (ppm)", 5, min = 1)),
+        column(4, numericInput(NS(id, "ppm_ms2_deisotope"), "MS2 tolerance (ppm)", 8, min = 1)),
         column(4, numericInput(NS(id, "max_ms2_charge"), "Max MS2 charge state", 3, min = 2, max = 4)),
       ),
     ),
@@ -51,7 +51,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       ns = ns,
       fluidRow(
         column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 1)),
-        column(4, numericInput(NS(id, "ppm_ms1_deisotope"), "MS1 tolerance (ppm)", 5, min = 1)),
+        column(4, numericInput(NS(id, "ppm_ms1_deisotope"), "MS1 tolerance (ppm)", 8, min = 1)),
         column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors (1: DDA)",
                                5, min = 0)),
         column(4, checkboxInput(NS(id, "use_defpeaks"),
@@ -169,8 +169,8 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateNumericInput(session, "topn_ms2ions", "Top-N features", 150)
 
         updateNumericInput(session, "n_mdda_flanks", "Number of flanking MS1 spectra", 6)
-        updateNumericInput(session, "ppm_ms1_deisotope", "MS1 tolerance (ppm)", 5)
-        updateNumericInput(session, "ppm_ms2_deisotope", "MS2 tolerance (ppm)", 5)
+        updateNumericInput(session, "ppm_ms1_deisotope", "MS1 tolerance (ppm)", 8)
+        updateNumericInput(session, "ppm_ms2_deisotope", "MS2 tolerance (ppm)", 8)
         updateNumericInput(session, "max_ms2_charge", "Max MS2 charge state", 3)
         updateCheckboxInput(session, "reproc_dda_ms1", "Reprocess DDA MS1 (mzML)", value = FALSE)
         updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = FALSE)
