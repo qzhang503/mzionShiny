@@ -98,6 +98,8 @@ app_server <- function(input, output, session)
   ppm_ms1_deisotope <- mgfs$ppm_ms1_deisotope
   ppm_ms2_deisotope <- mgfs$ppm_ms2_deisotope
   n_mdda_flanks <- mgfs$n_mdda_flanks
+  grad_isotope <- mgfs$grad_isotope
+  fct_iso2 <- mgfs$fct_iso2
   maxn_mdda_precurs <- mgfs$maxn_mdda_precurs
   # output$quant <- renderPrint(paste0("quant: ", quant() ))
   # output$ppm_reporters <- renderPrint(paste0("ppm_reporters: ", ppm_reporters() ))
@@ -291,6 +293,8 @@ app_server <- function(input, output, session)
       use_defpeaks = use_defpeaks(),
       ppm_ms1_deisotope = ppm_ms1_deisotope(),
       ppm_ms2_deisotope = ppm_ms2_deisotope(),
+      grad_isotope <- grad_isotope(),
+      fct_iso2 <- fct_iso2(),
       n_mdda_flanks = n_mdda_flanks(),
       maxn_mdda_precurs = maxn_mdda_precurs(),
 
@@ -408,6 +412,10 @@ app_server <- function(input, output, session)
       updateNumericInput(session, NS("mgf", "min_ret_time"), "Min retention time", value = cached_pars()$min_ret_time)
       updateNumericInput(session, NS("mgf", "max_ret_time"), "Max retention time", value = cached_pars()$max_ret_time)
       updateNumericInput(session, NS("mgf", "topn_ms2ions"), "Top-N features", value = cached_pars()$topn_ms2ions)
+      updateNumericInput(session, NS("mgf", "grad_isotope"), "Gradient cut-off in an isotope envelop",
+                         value = cached_pars()$grad_isotope)
+      updateNumericInput(session, NS("mgf", "fct_iso2"), "Gradient cut-off for calling a fuzzy precursor",
+                         value = cached_pars()$fct_iso2)
       updateNumericInput(session, NS("mgf", "n_mdda_flanks"), "Number of flanking MS1 spectra",
                          value = cached_pars()$n_mdda_flanks)
       updateNumericInput(session, NS("mgf", "ppm_ms1_deisotope"), "MS1 tolerance (ppm)",
