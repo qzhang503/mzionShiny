@@ -44,8 +44,8 @@ app_server <- function(input, output, session)
   fixedlabs <- mods$fixedlabs
   varlabs <- mods$varlabs
   use_short_mods <- mods$use_short_mods # for re-loading
-  use_ms1notches = mods$use_ms1notches
-  use_ms1neulosses = mods$use_ms1neulosses
+  use_ms1notches <- mods$use_ms1notches
+  use_ms1neulosses <- mods$use_ms1neulosses
   isolabs = mods$isolabs
   # output$fixedmods <- renderPrint(paste0("fixedmods: ", c(fixedmods()) ))
   # output$varmods <- renderPrint(paste0("varmods: ", c(varmods()) ))
@@ -92,7 +92,6 @@ app_server <- function(input, output, session)
   tmt_reporter_upper <- mgfs$tmt_reporter_upper
   deisotope_ms2 <- mgfs$deisotope_ms2
   max_ms2_charge <- mgfs$max_ms2_charge
-  reproc_dda_ms1 <- mgfs$reproc_dda_ms1
   is_mdda <- mgfs$is_mdda
   use_defpeaks <- mgfs$use_defpeaks
   ppm_ms1_deisotope <- mgfs$ppm_ms1_deisotope
@@ -101,6 +100,7 @@ app_server <- function(input, output, session)
   grad_isotope <- mgfs$grad_isotope
   fct_iso2 <- mgfs$fct_iso2
   maxn_mdda_precurs <- mgfs$maxn_mdda_precurs
+
   # output$quant <- renderPrint(paste0("quant: ", quant() ))
   # output$ppm_reporters <- renderPrint(paste0("ppm_reporters: ", ppm_reporters() ))
   # output$tmt_reporter_lower <- renderPrint(paste0("tmt_reporter_lower: ", tmt_reporter_lower() ))
@@ -288,7 +288,6 @@ app_server <- function(input, output, session)
 
       deisotope_ms2 = deisotope_ms2(),
       max_ms2_charge = max_ms2_charge(),
-      reproc_dda_ms1 = reproc_dda_ms1(),
       is_mdda = is_mdda(),
       use_defpeaks = use_defpeaks(),
       ppm_ms1_deisotope = ppm_ms1_deisotope(),
@@ -395,6 +394,16 @@ app_server <- function(input, output, session)
 
       ## MGF
       # if out_path changed -> cached_pars not found...
+      updateSelectInput(session, NS("mgf", "quant"), "Quantitation",
+                        choices = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt18"),
+                        selected = cached_pars()$quant)
+      updateNumericInput(session, NS("mgf", "ppm_reporters"), "Reporter tolerance (ppm)",
+                         value = cached_pars()$ppm_reporters)
+      updateNumericInput(session, NS("mgf", "tmt_reporter_lower"), "Reporter lower bound",
+                         value = cached_pars()$tmt_reporter_lower)
+      updateNumericInput(session, NS("mgf", "tmt_reporter_upper"), "Reporter upper bound",
+                         value = cached_pars()$tmt_reporter_upper)
+
       updateTextInput(session, NS("mgf", "out_path"), NULL, value = cached_pars()$out_path,
                       placeholder = file.path("~/Mzion/My_Project"))
       updateTextInput(session, NS("mgf", "mgf_path"), NULL, value = cached_pars()$mgf_path,
@@ -424,8 +433,6 @@ app_server <- function(input, output, session)
                          value = cached_pars()$ppm_ms2_deisotope)
       updateNumericInput(session, NS("mgf", "max_ms2_charge"), "Max MS2 charge state",
                          value = cached_pars()$max_ms2_charge)
-      updateCheckboxInput(session, NS("mgf", "reproc_dda_ms1"), "Reprocess DDA MS1 (mzML)",
-                          value = cached_pars()$reproc_dda_ms1)
       updateCheckboxInput(session, NS("mgf", "is_mdda"), "Chimeric precursors (mzML)",
                           value = cached_pars()$is_mdda)
       updateNumericInput(session, NS("mgf", "maxn_mdda_precurs"), "Number of precursors (1: DDA)",
@@ -567,17 +574,6 @@ app_server <- function(input, output, session)
       updateCheckboxInput(session, NS("fdr", "use_pep_tot_int"), "Precursor intensity", value = use_pep_tot_int)
       updateCheckboxInput(session, NS("fdr", "use_pep_n_matches2"), "Number of secondary features", value = use_pep_n_matches2)
       updateCheckboxInput(session, NS("fdr", "use_pep_ms2_deltas_mean"), "Mean MS2 mass error", value = use_pep_ms2_deltas_mean)
-
-      ## quantitation
-      updateSelectInput(session, NS("mgf", "quant"), "Quantitation",
-                        choices = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt18"),
-                        selected = cached_pars()$quant)
-      updateNumericInput(session, NS("mgf", "ppm_reporters"), "Reporter tolerance (ppm)",
-                         value = cached_pars()$ppm_reporters, min = 1)
-      updateNumericInput(session, NS("mgf", "tmt_reporter_lower"), "Reporter lower bound",
-                         value = cached_pars()$tmt_reporter_lower, min = 0)
-      updateNumericInput(session, NS("mgf", "tmt_reporter_upper"), "Reporter upper bound",
-                         value = cached_pars()$tmt_reporter_upper, min = 0)
     }
   })
 

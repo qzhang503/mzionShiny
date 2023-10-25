@@ -22,8 +22,6 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
                                            style = "background-color: #f5f5f5")),
       column(12, textInput(NS(id, ".path_cache"), label = NULL, value = formals(mzion::matchMS)$.path_cache)),
     ),
-    # h4("Subsetting"),
-    # hr(),
     fluidRow(
       column(4, numericInput(NS(id, "min_ms1_charge"), "Min MS1 charge state", 2)),
       column(4, numericInput(NS(id, "max_ms1_charge"), "Max MS1 charge state", 4)),
@@ -44,8 +42,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
         column(4, numericInput(NS(id, "max_ms2_charge"), "Max MS2 charge state", 3, min = 2, max = 4)),
       ),
     ),
-    checkboxInput(NS(id, "reproc_dda_ms1"), "Reprocess DDA MS1 (mzML)", value = TRUE),
-    checkboxInput(NS(id, "is_mdda"), "Chimeric precursors (mzML)", value = FALSE),
+    checkboxInput(NS(id, "is_mdda"), "Chimeric precursors (mzML)", value = TRUE),
     conditionalPanel(
       condition = "input.is_mdda == true",
       ns = ns,
@@ -57,7 +54,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
         column(4, numericInput(NS(id, "fct_iso2"), "Gradient cut-off for calling a fuzzy precursor", 3,
                                min = 1, max = 6)),
         column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors (1: DDA)",
-                               5, min = 0)),
+                               1, min = 0)),
         column(4, checkboxInput(NS(id, "use_defpeaks"),
                                 "Use MSConvert defaults at undetermined precursors", value = FALSE)),
       ),
@@ -176,11 +173,10 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateNumericInput(session, "ppm_ms1_deisotope", "MS1 tolerance (ppm)", 8)
         updateNumericInput(session, "ppm_ms2_deisotope", "MS2 tolerance (ppm)", 8)
         updateNumericInput(session, "max_ms2_charge", "Max MS2 charge state", 3)
-        updateCheckboxInput(session, "reproc_dda_ms1", "Reprocess DDA MS1 (mzML)", value = TRUE)
-        updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = FALSE)
+        updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = TRUE)
         updateNumericInput(session, "grad_isotope", "Gradient cut-off in an isotope envelop", 1.6)
         updateNumericInput(session, "fct_iso2", "Gradient cut-off for calling a fuzzy precursor", 3)
-        updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (1: DDA)", 5)
+        updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (1: DDA)", 1)
         updateCheckboxInput(session, "use_defpeaks",
                             "Use MSConvert defaults at undetermined precursors", value = FALSE)
         updateCheckboxInput(session, "deisotope_ms2", "De-isotope MS2 spectra", value = TRUE)
@@ -194,17 +190,6 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateNumericInput(session, "ppm_reporters", "Reporter tolerance (ppm)", value = 10, min = 1)
         updateNumericInput(session, "tmt_reporter_lower", "Reporter lower bound", value = 126.1, min = 0)
         updateNumericInput(session, "tmt_reporter_upper", "Reporter upper bound", value = 135.2, min = 0)
-      })
-
-      observeEvent(input$reproc_dda_ms1, {
-        if (input$reproc_dda_ms1) {
-          updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = TRUE)
-          updateNumericInput(session, "n_mdda_flanks", "Number of flanking MS1 spectra", 6)
-          updateNumericInput(session, "ppm_ms2_deisotope", "MS2 tolerance (ppm)", 8)
-          updateNumericInput(session, "grad_isotope", "Gradient cut-off in an isotope envelop", 1.6)
-          updateNumericInput(session, "fct_iso2", "Gradient cut-off for calling a fuzzy precursor", 3)
-          updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (1: DDA)", 1)
-        }
       })
 
       # deisotope_ms2 <- eventReactive(input$ppm_ms2_deisotope, if (input$ppm_ms2_deisotope > 0) TRUE else FALSE)
@@ -224,7 +209,6 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
            # deisotope_ms2 = deisotope_ms2,
            deisotope_ms2 = reactive(input$deisotope_ms2),
            max_ms2_charge = reactive(input$max_ms2_charge),
-           reproc_dda_ms1 = reactive(input$reproc_dda_ms1),
            is_mdda = reactive(input$is_mdda),
            use_defpeaks = reactive(input$use_defpeaks),
            ppm_ms1_deisotope = reactive(input$ppm_ms1_deisotope),
