@@ -292,8 +292,8 @@ app_server <- function(input, output, session)
       use_defpeaks = use_defpeaks(),
       ppm_ms1_deisotope = ppm_ms1_deisotope(),
       ppm_ms2_deisotope = ppm_ms2_deisotope(),
-      grad_isotope <- grad_isotope(),
-      fct_iso2 <- fct_iso2(),
+      grad_isotope = grad_isotope(),
+      fct_iso2 = fct_iso2(),
       n_mdda_flanks = n_mdda_flanks(),
       maxn_mdda_precurs = maxn_mdda_precurs(),
 
