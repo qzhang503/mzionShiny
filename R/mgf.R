@@ -23,8 +23,8 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       column(12, textInput(NS(id, ".path_cache"), label = NULL, value = formals(mzion::matchMS)$.path_cache)),
     ),
     fluidRow(
-      column(4, numericInput(NS(id, "min_ms1_charge"), "Min MS1 charge state", 2)),
-      column(4, numericInput(NS(id, "max_ms1_charge"), "Max MS1 charge state", 4)),
+      column(4, numericInput(NS(id, "min_ms1_charge"), "Min MS1 charge state", 2, 1)),
+      column(4, numericInput(NS(id, "max_ms1_charge"), "Max MS1 charge state", 4, 2)),
       column(4, numericInput(NS(id, "min_ms2mass"), "Min MS2 mass", 115)),
       column(4, numericInput(NS(id, "max_ms2mass"), "Max MS2 mass", 4500)),
       column(4, numericInput(NS(id, "min_scan_num"), "Min scan number", 1)),
@@ -33,6 +33,21 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       column(4, numericInput(NS(id, "max_ret_time"), "Max retention time", Inf)),
       column(4, numericInput(NS(id, "topn_ms2ions"), "Top-N features", 150)),
     ),
+    # hr(),
+    # h4("Chimeric precursors (mzML)"),
+    checkboxInput(NS(id, "is_mdda"), "Chimeric precursors (mzML)", value = TRUE),
+    conditionalPanel(
+      condition = "input.is_mdda == true",
+      ns = ns,
+      fluidRow(
+        column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors (0: do nothing)", 1, min = 0)),
+        column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 1)),
+        column(4, numericInput(NS(id, "ppm_ms1_deisotope"), "MS1 tolerance (ppm)", 8, min = 1)),
+        column(4, numericInput(NS(id, "grad_isotope"), "Isotope-envelope gradient", 1.6, min = 1)),
+        column(4, numericInput(NS(id, "fct_iso2"), "Fuzzy isotope-envelope gradient", 3, min = 1)),
+        column(4, checkboxInput(NS(id, "use_defpeaks"), "Use MSConvert defaults at undetermined precursors", value = FALSE)),
+      ),
+    ),
     checkboxInput(NS(id, "deisotope_ms2"), "De-isotope MS2 spectra", value = TRUE),
     conditionalPanel(
       condition = "input.deisotope_ms2 == true",
@@ -40,19 +55,6 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       fluidRow(
         column(4, numericInput(NS(id, "ppm_ms2_deisotope"), "MS2 tolerance (ppm)", 8, min = 1)),
         column(4, numericInput(NS(id, "max_ms2_charge"), "Max MS2 charge state", 3, min = 2, max = 4)),
-      ),
-    ),
-    checkboxInput(NS(id, "is_mdda"), "Chimeric precursors (mzML)", value = TRUE),
-    conditionalPanel(
-      condition = "input.is_mdda == true",
-      ns = ns,
-      fluidRow(
-        column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 1)),
-        column(4, numericInput(NS(id, "ppm_ms1_deisotope"), "MS1 tolerance (ppm)", 8, min = 1)),
-        column(4, numericInput(NS(id, "grad_isotope"), "Gradient cut-off in an isotope envelop", 1.6, min = 1)),
-        column(4, numericInput(NS(id, "fct_iso2"), "Gradient cut-off for calling a fuzzy precursor", 3, min = 1)),
-        column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors (1: DDA)", 1, min = 0)),
-        column(4, checkboxInput(NS(id, "use_defpeaks"), "Use MSConvert defaults at undetermined precursors", value = FALSE)),
       ),
     ),
     hr(),
@@ -170,9 +172,9 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateNumericInput(session, "ppm_ms2_deisotope", "MS2 tolerance (ppm)", 8)
         updateNumericInput(session, "max_ms2_charge", "Max MS2 charge state", 3)
         updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = TRUE)
-        updateNumericInput(session, "grad_isotope", "Gradient cut-off in an isotope envelop", 1.6)
-        updateNumericInput(session, "fct_iso2", "Gradient cut-off for calling a fuzzy precursor", 3)
-        updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (1: DDA)", 1)
+        updateNumericInput(session, "grad_isotope", "Isotope-envelope gradient", 1.6)
+        updateNumericInput(session, "fct_iso2", "Fuzzy isotope-envelope gradient", 3)
+        updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (0: do nothing)", 1)
         updateCheckboxInput(session, "use_defpeaks",
                             "Use MSConvert defaults at undetermined precursors", value = FALSE)
         updateCheckboxInput(session, "deisotope_ms2", "De-isotope MS2 spectra", value = TRUE)
@@ -189,7 +191,17 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
       })
 
       # deisotope_ms2 <- eventReactive(input$ppm_ms2_deisotope, if (input$ppm_ms2_deisotope > 0) TRUE else FALSE)
-      # is_mdda <- eventReactive(input$ppm_ms1_deisotope, if (input$ppm_ms1_deisotope > 0) TRUE else FALSE)
+
+      # observeEvent(input$maxn_mdda_precurs, {
+      #   if (input$maxn_mdda_precurs <= 0) {
+      #     updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = FALSE)
+      #   }
+      # })
+      observeEvent(input$is_mdda, {
+        if (!input$is_mdda) {
+          updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (0: do nothing)", 0)
+        }
+      })
 
       list(mgf_path = reactive(input$mgf_path),
            min_ms1_charge = reactive(input$min_ms1_charge),
@@ -205,7 +217,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
            # deisotope_ms2 = deisotope_ms2,
            deisotope_ms2 = reactive(input$deisotope_ms2),
            max_ms2_charge = reactive(input$max_ms2_charge),
-           is_mdda = reactive(input$is_mdda),
+           # is_mdda = reactive(input$is_mdda),
            use_defpeaks = reactive(input$use_defpeaks),
            ppm_ms1_deisotope = reactive(input$ppm_ms1_deisotope),
            ppm_ms2_deisotope = reactive(input$ppm_ms2_deisotope),
