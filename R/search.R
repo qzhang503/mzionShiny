@@ -11,8 +11,8 @@ searchUI <- function(id)
       column(4, numericInput(NS(id, "min_mass"), "Min precursor mass", value = 200, min = 1)),
       column(4, numericInput(NS(id, "max_mass"), "Max precursor mass", value = 4500, min = 500)),
       column(4, numericInput(NS(id, "ppm_ms1"), "MS1 tolerance (ppm)", value = 20, min = 1)),
-      column(4, numericInput(NS(id, "maxn_vmods_setscombi"), "Max combinations in modification sets",
-                             value = 512, min = 1)),
+      column(4, numericInput(NS(id, "maxn_vmods_setscombi"), "Max modification sets",value = 512, min = 1) |>
+               bslib::tooltip("Maximum sets of combinatorial modifications")),
       column(4, numericInput(NS(id, "maxn_vmods_per_pep"), "Max variable modifications",
                              value = 5, min = 1)),
       column(4, numericInput(NS(id, "maxn_sites_per_vmod"), "Max variable modifications per site",
@@ -31,10 +31,10 @@ searchUI <- function(id)
     selectInput(NS(id, "type_ms2ions"), "MS2 fragments", c("by", "ax", "cz"), selected = "by"),
     selectInput(NS(id, "enzyme"), "Enzyme", enzymes, selected = "Trypsin_P"),
     # uiOutput(NS(id, "nes")),
-    numericInput(NS(id, "noenzyme_maxn"),
-                 paste0("Peptide lengths for a section search at noenzyme specificity ",
-                        "(e.g., lengths 7-21, 22-36, ... at a value of 15) "),
-                 value = 0),
+    numericInput(NS(id, "noenzyme_maxn"), "Max span of peptide lengths", value = 0) |>
+      bslib::tooltip(paste0("For search at noenzyme specificity. ",
+                            "E.g. at the minimum peptide length of 7, ",
+                            "a setting of 15 corresponds to a sectional searchs at lengths 7-21, 22-36 etc.")),
     checkboxInput(NS(id, "customenzyme"), "Custom enzyme"),
     conditionalPanel(
       condition = "input.customenzyme == true",
@@ -45,8 +45,6 @@ searchUI <- function(id)
     actionButton(NS(id, "reset"), "Reset",
                  style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
                  title = "Reset values in the current tab"),
-
-
   )
 }
 
@@ -66,7 +64,7 @@ searchServer <- function(id)
         updateNumericInput(session, "min_mass", "Min precursor mass", value = 200, min = 1)
         updateNumericInput(session, "max_mass", "Max precursor mass", value = 4500, min = 500)
         updateNumericInput(session, "ppm_ms1", "MS1 tolerance (ppm)", 20, 1)
-        updateNumericInput(session, "maxn_vmods_setscombi", "Max combinations in modification sets", value = 512, min = 1)
+        updateNumericInput(session, "maxn_vmods_setscombi", "Max modification sets", value = 512, min = 1)
         updateNumericInput(session, "maxn_vmods_per_pep", "Max variable modifications", value = 5, min = 1)
         updateNumericInput(session, "maxn_sites_per_vmod", "Max variable modifications per site", value = 3, min = 1)
         updateNumericInput(session, "maxn_vmods_sitescombi_per_pep", "Max position permutations", 64, 1)
@@ -79,10 +77,7 @@ searchServer <- function(id)
         updateSelectInput(session, "type_ms2ions", "MS2 fragments", c("by", "ax", "cz"), selected = "by")
         updateSelectInput(session, "enzyme", "Enzyme", enzymes, selected = "Trypsin_P")
         updateCheckboxInput(session, "customenzyme", "Custom enzyme", value = FALSE)
-        updateNumericInput(session, "noenzyme_maxn",
-                           paste0("Max number of peptide lengths for a section ",
-                                  "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
-                           value = 0)
+        updateNumericInput(session, "noenzyme_maxn", "Max span of peptide lengths", value = 0)
         updateTextInput(session, "custom_enzyme", "Specificity (in regular expression)", value = "",
                         placeholder = "Cterm = NULL, Nterm = NULL")
       })
@@ -94,8 +89,7 @@ searchServer <- function(id)
             output$nes <- renderUI({
               fluidRow(
                 column(8, numericInput(NS(id, "noenzyme_maxn"),
-                                       paste0("Max number of peptide lengths for a section ",
-                                              "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
+                                       "Maximum span of peptide lengths",
                                        value = 0)),
               )
             })
@@ -106,21 +100,24 @@ searchServer <- function(id)
       if (FALSE) {
         output$nes <- renderUI({
           x <- numericInput(NS(id, "noenzyme_maxn"),
-                            paste0("Max number of peptide lengths for a section ",
-                                   "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
+                            "Maximum span of peptide lengths",
                             value = dplyr::coalesce(input$noenzyme_maxn, 0))
 
           if (input$enzyme != "Noenzyme") {
             x <- div(style = "visibility:hidden;", x)
           }
 
-          # fluidRow(
-          #   column(8, x)
-          # )
-
           x
         })
       }
+
+      observeEvent(input$maxn_vmods_setscombi, {
+        bslib::update_tooltip(session$ns("maxn_vmods_setscombi"))
+      })
+
+      observeEvent(input$noenzyme_maxn, {
+        bslib::update_tooltip(session$ns("noenzyme_maxn"))
+      })
 
       list(min_len = reactive(input$min_len),
            max_len = reactive(input$max_len),

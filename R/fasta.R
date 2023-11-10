@@ -221,3 +221,4 @@ fastaServer <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_
   )
 }
 
+

@@ -2,6 +2,7 @@
 
 library(mzion)
 library(shinyFiles)
+# library(bslib)
 # library(shinyjs)
 
 #' The application user-interface
@@ -20,6 +21,8 @@ app_ui <- function(request) {
     navbarPage(
       # shinyjs::useShinyjs(),
       # theme = bslib::bs_theme(bootswatch = "cerulean"),
+      # theme = bslib::bs_theme(preset = "shiny"),
+      theme = bslib::bs_theme(),
       title = a("Mzion", href = "https://github.com/qzhang503/mzion/"),
       # title = "Mzion",
       id = "Mzion",
@@ -128,11 +131,13 @@ app_ui <- function(request) {
                                                      filetype = list(text = "pars"), multiple = FALSE,
                                                      viewtype = "detail",
                                                      style = "background-color:#43a2ca; width:70px;
-                                                     font-size:100%; color:white"),
+                                                     font-size:100%; color:white") |>
+                          bslib::tooltip("Reload search parameters"),
                         shinyFiles::shinySaveButton("savepars", "Save", "Save file",
                                                     filetype = list(text = "pars"), viewtype = "icon",
                                                     style = "background-color:#43a2ca; width:70px;
-                                                    font-size:100%; color:white"),
+                                                    font-size:100%; color:white") |>
+                          bslib::tooltip("Save search parameters"),
                         actionButton("submit", "Submit", style = "background-color:#41ab5d; width:70px;
                              font-size:100%; color:white"),
                         actionButton("cancel", "Cancel", style = "background-color:#a50f15; width:70px;

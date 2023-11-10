@@ -46,7 +46,7 @@ app_server <- function(input, output, session)
   use_short_mods <- mods$use_short_mods # for re-loading
   use_ms1notches <- mods$use_ms1notches
   use_ms1neulosses <- mods$use_ms1neulosses
-  isolabs = mods$isolabs
+  isolabs <- mods$isolabs
   # output$fixedmods <- renderPrint(paste0("fixedmods: ", c(fixedmods()) ))
   # output$varmods <- renderPrint(paste0("varmods: ", c(varmods()) ))
   # output$locmods <- renderPrint(paste0("locmods: ", c(locmods()) ))
@@ -402,7 +402,6 @@ app_server <- function(input, output, session)
                          value = cached_pars()$tmt_reporter_lower)
       updateNumericInput(session, NS("mgf", "tmt_reporter_upper"), "Reporter upper bound",
                          value = cached_pars()$tmt_reporter_upper)
-
       updateTextInput(session, NS("mgf", "out_path"), NULL, value = cached_pars()$out_path,
                       placeholder = file.path("~/Mzion/My_Project"))
       updateTextInput(session, NS("mgf", "mgf_path"), NULL, value = cached_pars()$mgf_path,

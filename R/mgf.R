@@ -15,14 +15,18 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       column(4, shinyFiles::shinyDirButton(NS(id, "select_outpath"), "Output path", "Please select a folder",
                                            style = "background-color: #f5f5f5")),
       column(12, textInput(NS(id, "out_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project"))),
-      column(4, shinyFiles::shinyDirButton(NS(id, "select_mgfpath"), "MGF path", "Please select a folder",
-                                           style = "background-color: #f5f5f5")),
+      column(4, shinyFiles::shinyDirButton(NS(id, "select_mgfpath"), "Peaklist path", "Please select a folder",
+                                           style = "background-color: #f5f5f5") |>
+               bslib::tooltip("Formart mzML or MGF")),
+      ###
       column(12, textInput(NS(id, "mgf_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project/mgf"))),
       column(4, shinyFiles::shinyDirButton(NS(id, "select_cachepath"), "Cache folder", "Please select a folder",
                                            style = "background-color: #f5f5f5")),
       column(12, textInput(NS(id, ".path_cache"), label = NULL, value = formals(mzion::matchMS)$.path_cache)),
     ),
+    # hr(),
     fluidRow(
+      column(4, numericInput(NS(id, "topn_ms2ions"), "Top-N features", 150)),
       column(4, numericInput(NS(id, "min_ms1_charge"), "Min MS1 charge state", 2, 1)),
       column(4, numericInput(NS(id, "max_ms1_charge"), "Max MS1 charge state", 4, 2)),
       column(4, numericInput(NS(id, "min_ms2mass"), "Min MS2 mass", 115)),
@@ -31,21 +35,23 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       column(4, numericInput(NS(id, "max_scan_num"), "Max scan number", Inf)),
       column(4, numericInput(NS(id, "min_ret_time"), "Min retention time", 0)),
       column(4, numericInput(NS(id, "max_ret_time"), "Max retention time", Inf)),
-      column(4, numericInput(NS(id, "topn_ms2ions"), "Top-N features", 150)),
     ),
     # hr(),
     # h4("Chimeric precursors (mzML)"),
-    checkboxInput(NS(id, "is_mdda"), "Chimeric precursors (mzML)", value = TRUE),
+    checkboxInput(NS(id, "is_mdda"), "Chimeric precursors", value = TRUE) |>
+      bslib::tooltip("Require mzML format"),
     conditionalPanel(
       condition = "input.is_mdda == true",
       ns = ns,
       fluidRow(
-        column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors (0: do nothing)", 1, min = 0)),
+        column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors", 1, min = 0) |>
+                 bslib::tooltip("0 - use MSConvert defaults ; 1 - use Mzion de-isotoping ; > 1 consider chimeric precursors")),
         column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 1)),
         column(4, numericInput(NS(id, "ppm_ms1_deisotope"), "MS1 tolerance (ppm)", 8, min = 1)),
         column(4, numericInput(NS(id, "grad_isotope"), "Isotope-envelope gradient", 1.6, min = 1)),
         column(4, numericInput(NS(id, "fct_iso2"), "Fuzzy isotope-envelope gradient", 3, min = 1)),
-        column(4, checkboxInput(NS(id, "use_defpeaks"), "Use MSConvert defaults at undetermined precursors", value = FALSE)),
+        column(4, checkboxInput(NS(id, "use_defpeaks"), "Include defaults", value = FALSE) |>
+                 bslib::tooltip("Use MSConvert precursors if undetermined by Mzion")),
       ),
     ),
     checkboxInput(NS(id, "deisotope_ms2"), "De-isotope MS2 spectra", value = TRUE),
@@ -106,7 +112,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateTextInput(session = session, inputId = "out_path", label = NULL, value = out_path())
       })
 
-      # MGF path
+      # Peaklist path
       shinyFiles::shinyDirChoose(input, "select_mgfpath", roots = volumes, session = session,
                                  restrictions = system.file(package = "base"))
       mgf_path <- reactive({
@@ -117,6 +123,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
       })
 
       observeEvent(input$select_mgfpath, {
+        bslib::update_tooltip(session$ns("select_mgfpath"))
         updateTextInput(session = session, inputId = "mgf_path", label = NULL, value = mgf_path())
       })
 
@@ -175,8 +182,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateNumericInput(session, "grad_isotope", "Isotope-envelope gradient", 1.6)
         updateNumericInput(session, "fct_iso2", "Fuzzy isotope-envelope gradient", 3)
         updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (0: do nothing)", 1)
-        updateCheckboxInput(session, "use_defpeaks",
-                            "Use MSConvert defaults at undetermined precursors", value = FALSE)
+        updateCheckboxInput(session, "use_defpeaks", "Include defaults", value = FALSE)
         updateCheckboxInput(session, "deisotope_ms2", "De-isotope MS2 spectra", value = TRUE)
         updateCheckboxInput(session, "exclude_reporter_region", "Exclude reporter region", value = FALSE)
         updateCheckboxInput(session, "calib_ms1mass", "Calibrate masses", value = FALSE)
@@ -192,15 +198,27 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
 
       # deisotope_ms2 <- eventReactive(input$ppm_ms2_deisotope, if (input$ppm_ms2_deisotope > 0) TRUE else FALSE)
 
+      observeEvent(input$maxn_mdda_precurs, {
+        bslib::update_tooltip(
+          session$ns("maxn_mdda_precurs"),
+        )
+      })
+
       # observeEvent(input$maxn_mdda_precurs, {
       #   if (input$maxn_mdda_precurs <= 0) {
       #     updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = FALSE)
       #   }
       # })
       observeEvent(input$is_mdda, {
+        bslib::update_tooltip(session$ns("is_mdda"))
+
         if (!input$is_mdda) {
           updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (0: do nothing)", 0)
         }
+      })
+
+      observeEvent(input$use_defpeaks, {
+        bslib::update_tooltip(session$ns("use_defpeaks"))
       })
 
       list(mgf_path = reactive(input$mgf_path),

@@ -7,10 +7,13 @@ fdrUI <- function(id)
     fluidRow(
       column(4, numericInput(NS(id, "target_fdr"), "Target FDR", value = 0.01, min = 1E-10)),
       column(4, selectInput(NS(id, "fdr_type"), "FDR type", c("protein", "peptide", "psm"))),
-      column(4, numericInput(NS(id, "max_pepscores_co"), "Score threshold to warrent a PSM significance", value = 50, min = 0)),
-      column(4, numericInput(NS(id, "min_pepscores_co"), "Score threshold to discard a PSM significance", value = 0, min = 0)),
-      column(4, numericInput(NS(id, "max_protscores_co"), "Upper limit in protein score cut-offs", value = Inf, min = 0)),
-      column(4, numericInput(NS(id, "max_protnpep_co"), "Max number of peptides to warrant a protein significance", value = 10, min = 1)),
+      column(4, numericInput(NS(id, "max_pepscores_co"), "Upper PSM score threshold", value = 50, min = 0) |>
+               bslib::tooltip("to warrent a PSM significance")),
+      column(4, numericInput(NS(id, "min_pepscores_co"), "Lower PSM score threshold", value = 0, min = 0) |>
+               bslib::tooltip("to discard a PSM significance")),
+      column(4, numericInput(NS(id, "max_protscores_co"), "Upper protein score threshold", value = Inf, min = 0)),
+      column(4, numericInput(NS(id, "max_protnpep_co"), "Threshold peptides per protein", value = 10, min = 1) |>
+               bslib::tooltip("E.g., warrant a protein significance with >= 10 identifying peptides")),
       column(4, selectInput(NS(id, "fdr_group"), "FDR group", fdr_groups, selected = "base")),
       column(4, selectInput(NS(id, "nes_fdr_group"), "FDR group (NES)", nes_fdr_groups, selected = "base")),
       column(4, numericInput(NS(id, "topn_mods_per_seq"), "Top-N matches per sequence", value = 1, min = 1)),
@@ -55,10 +58,10 @@ fdrServer <- function(id)
       observeEvent(input$reset, {
         updateNumericInput(session, "target_fdr", "Target FDR", value = 0.01, min = 1E-10)
         updateSelectInput(session, "fdr_type", "FDR type", c("protein", "peptide", "psm"))
-        updateNumericInput(session, "max_pepscores_co", "Score threshold to warrent a PSM significance", value = 50, min = 0)
-        updateNumericInput(session, "min_pepscores_co", "Score threshold to discard a PSM significance", value = 0, min = 0)
-        updateNumericInput(session, "max_protscores_co", "Upper limit in protein score cut-offs", value = Inf, min = 0)
-        updateNumericInput(session, "max_protnpep_co", "Max number of peptides to warrant a protein significance", value = 10, min = 1)
+        updateNumericInput(session, "max_pepscores_co", "Upper PSM score threshold", value = 50, min = 0)
+        updateNumericInput(session, "min_pepscores_co", "Lower PSM score threshold", value = 0, min = 0)
+        updateNumericInput(session, "max_protscores_co", "Upper protein score threshold", value = Inf, min = 0)
+        updateNumericInput(session, "max_protnpep_co", "Threshold peptides per protein", value = 10, min = 1)
         updateSelectInput(session, "fdr_group", "FDR group", fdr_groups, selected = "base")
         updateSelectInput(session, "nes_fdr_group", "FDR group (NES)", nes_fdr_groups, selected = "base")
         updateNumericInput(session, "topn_mods_per_seq", "Top-N matches per sequence", value = 1, min = 1)
@@ -87,6 +90,18 @@ fdrServer <- function(id)
       p8 <- eventReactive(input$use_pep_tot_int, if (input$use_pep_tot_int) "pep_tot_int" else NULL)
       p9 <- eventReactive(input$use_pep_n_matches2, if (input$use_pep_n_matches2) "pep_n_matches2" else NULL)
       p10 <- eventReactive(input$use_pep_ms2_deltas_mean, if (input$use_pep_ms2_deltas_mean) "pep_ms2_deltas_mean" else NULL)
+
+      observeEvent(input$max_pepscores_co, {
+        bslib::update_tooltip(session$ns("max_pepscores_co"))
+      })
+
+      observeEvent(input$min_pepscores_co, {
+        bslib::update_tooltip(session$ns("min_pepscores_co"))
+      })
+
+      observeEvent(input$max_protnpep_co, {
+        bslib::update_tooltip(session$ns("max_protnpep_co"))
+      })
 
       list(target_fdr = reactive(input$target_fdr),
            fdr_type = reactive(input$fdr_type),
