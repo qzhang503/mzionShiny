@@ -19,9 +19,10 @@ modUI <- function(id)
     ),
     column(4, sliderInput(ns("n_13c"), "Numbers of 13C", min = -1, max = 3, value = c(0, 0))),
     column(4, checkboxInput(NS(id, "rm_dup_term_anywhere"),
-                            "Remove the same-site combinations", value = TRUE) |>
+                            "Remove concurrent Term/Anywhere", value = FALSE) |>
              bslib::tooltip("e.g., N-term Q and Anywhere Q")),
-    checkboxInput(ns("use_ms1notches"), "Precursor off-sets"),
+    checkboxInput(ns("use_ms1notches"), "Precursor off-sets") |>
+      bslib::tooltip("Select either Precursor off-sets or Precursor neutral losses, not both."),
     conditionalPanel(
       condition = "input.use_ms1notches == true",
       ns = ns,
@@ -106,7 +107,7 @@ modServer <- function(id)
                           selected = c("Oxidation (Anywhere = M)", "Deamidated (Anywhere = N)",
                                        "Deamidated (Anywhere = Q)"))
         updateSliderInput(session, "n_13c", "Numbers of 13C", min = -1, max = 3, value = c(0, 0))
-        updateCheckboxInput(session, "rm_dup_term_anywhere","Remove the same-site combinations", value = FALSE)
+        updateCheckboxInput(session, "rm_dup_term_anywhere","Remove concurrent Term/Anywhere", value = FALSE)
         updateCheckboxInput(session, "use_ms1notches", "Precursor off-sets", value = FALSE)
         updateCheckboxInput(session, "use_ms1neulosses", "Precursor neutral losses", value = FALSE)
         updateCheckboxInput(session, "isolabs", "Isotope labels", value = FALSE)
@@ -129,8 +130,12 @@ modServer <- function(id)
         }
       })
 
-      observeEvent(input$maxn_mdda_precurs, {
+      observeEvent(input$rm_dup_term_anywhere, {
         bslib::update_tooltip(session$ns("rm_dup_term_anywhere"))
+      })
+
+      observeEvent(input$use_ms1notches, {
+        bslib::update_tooltip(session$ns("use_ms1notches"))
       })
 
       list(fixedmods = reactive(input$fixedmods),

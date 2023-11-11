@@ -143,7 +143,10 @@ app_server <- function(input, output, session)
   type_ms2ions <- searches$type_ms2ions
   enzyme <- searches$enzyme
   noenzyme_maxn <- searches$noenzyme_maxn
-  custom_enzyme <- searches$custom_enzyme
+  custom_enzymeC <- searches$custom_enzymeC
+  custom_enzymeN <- searches$custom_enzymeN
+  custom_enzyme <- reactive(c(Cterm = custom_enzymeC(), Nterm = custom_enzymeN()))
+
   # output$min_len <- renderPrint(paste0("min_len: ", min_len() ))
   # output$max_len <- renderPrint(paste0("max_len: ", max_len() ))
   # output$max_miss <- renderPrint(paste0("max_miss: ", max_miss() ))
@@ -398,9 +401,9 @@ app_server <- function(input, output, session)
                         selected = cached_pars()$quant)
       updateNumericInput(session, NS("mgf", "ppm_reporters"), "Reporter tolerance (ppm)",
                          value = cached_pars()$ppm_reporters)
-      updateNumericInput(session, NS("mgf", "tmt_reporter_lower"), "Reporter lower bound",
+      updateNumericInput(session, NS("mgf", "tmt_reporter_lower"), "Reporter lower bound (m/z)",
                          value = cached_pars()$tmt_reporter_lower)
-      updateNumericInput(session, NS("mgf", "tmt_reporter_upper"), "Reporter upper bound",
+      updateNumericInput(session, NS("mgf", "tmt_reporter_upper"), "Reporter upper bound (m/z)",
                          value = cached_pars()$tmt_reporter_upper)
       updateTextInput(session, NS("mgf", "out_path"), NULL, value = cached_pars()$out_path,
                       placeholder = file.path("~/Mzion/My_Project"))
@@ -431,9 +434,9 @@ app_server <- function(input, output, session)
                          value = cached_pars()$ppm_ms2_deisotope)
       updateNumericInput(session, NS("mgf", "max_ms2_charge"), "Max MS2 charge state",
                          value = cached_pars()$max_ms2_charge)
-      updateNumericInput(session, NS("mgf", "maxn_mdda_precurs"), "Number of precursors (1: DDA)",
+      updateNumericInput(session, NS("mgf", "maxn_mdda_precurs"), "Number of precursors",
                          value = cached_pars()$maxn_mdda_precurs)
-      updateCheckboxInput(session, NS("mgf", "use_defpeaks"), "Use MSConvert defaults at undetermined precursors",
+      updateCheckboxInput(session, NS("mgf", "use_defpeaks"), "Include defaults",
                           value = cached_pars()$use_defpeaks)
       updateCheckboxInput(session, NS("mgf", "deisotope_ms2"), "De-isotope MS2 spectra",
                           value = cached_pars()$deisotope_ms2)
@@ -461,9 +464,7 @@ app_server <- function(input, output, session)
                         value = c(cached_pars()$n_13c[1],
                                   cached_pars()$n_13c[length(cached_pars()$n_13c)]),
                           min = -1, max = 3)
-      updateCheckboxInput(session, NS("mod", "rm_dup_term_anywhere"),
-                          paste0("Remove the same-site combinations at both terminal and anywhere positions ",
-                                 "(e.g., N-term Q and Anywhere Q)"),
+      updateCheckboxInput(session, NS("mod", "rm_dup_term_anywhere"), "Remove concurrent Term/Anywhere",
                           value = cached_pars()$rm_dup_term_anywhere)
       # cached_pars()$use_ms1notches, use_ms1neulosses and isolabs are NULL
       updateCheckboxInput(session, NS("mod", "use_ms1notches"), "Precursor off-sets",
@@ -498,7 +499,7 @@ app_server <- function(input, output, session)
                          value = cached_pars()$max_mass, min = 500)
       updateNumericInput(session, NS("search", "ppm_ms1"), "MS1 tolerance (ppm)",
                          value = cached_pars()$ppm_ms1, min = 1)
-      updateNumericInput(session, NS("search", "maxn_vmods_setscombi"), "Max combinations in modification sets",
+      updateNumericInput(session, NS("search", "maxn_vmods_setscombi"), "Max modification sets",
                          value = cached_pars()$maxn_vmods_setscombi, min = 1)
       updateNumericInput(session, NS("search", "maxn_vmods_per_pep"), "Max variable modifications",
                          value = cached_pars()$maxn_vmods_per_pep, min = 1)
@@ -517,25 +518,47 @@ app_server <- function(input, output, session)
       updateSelectInput(session, NS("search", "type_ms2ions"), "MS2 fragments",
                         c("by", "ax", "cz"), selected = cached_pars()$type_ms2ions)
       updateSelectInput(session, NS("search", "enzyme"), "Enzyme", enzymes, selected = cached_pars()$enzyme)
-      updateCheckboxInput(session, NS("search", "customenzyme"), "Custom enzyme", value = cached_pars()$customenzyme)
-      updateNumericInput(session, NS("search", "noenzyme_maxn"),
-                         paste0("Max number of peptide lengths for a section ",
-                                "(e.g., lengths 7-21, 22-36, ... at a value of 15)"),
+      updateNumericInput(session, NS("search", "noenzyme_maxn"), "Max span of peptide lengths",
                          value = cached_pars()$noenzyme_maxn)
-      updateTextInput(session, NS("search", "custom_enzyme"), "Specificity (in regular expression)",
-                      value = cached_pars()$custom_enzyme, placeholder = "Cterm = NULL, Nterm = NULL")
+
+      custom_enzyme <- cached_pars()$custom_enzyme
+      len_enz <- length(custom_enzyme)
+
+      if (len_enz == 2L) {
+        custom_enzymeC <- custom_enzyme[["Cterm"]]
+        custom_enzymeN <- custom_enzyme[["Nterm"]]
+      } else if (len_enz == 1L) {
+        if (names(custom_enzyme) == "Cterm") {
+          custom_enzymeC <- custom_enzyme[[1]]
+          custom_enzymeN <- ""
+        } else {
+          custom_enzymeC <- ""
+          custom_enzymeN <- custom_enzyme[[1]]
+        }
+      } else {
+        custom_enzymeN <- custom_enzymeC <- ""
+      }
+
+      if (custom_enzymeC != "" || custom_enzymeN != "") {
+        updateCheckboxInput(session, NS("search", "customenzyme"), "Custom enzyme", value = TRUE)
+      } else {
+        updateCheckboxInput(session, NS("search", "customenzyme"), "Custom enzyme", value = FALSE)
+      }
+      updateTextInput(session, NS("search", "custom_enzymeC"), "C-term specificity", value = custom_enzymeC)
+      updateTextInput(session, NS("search", "custom_enzymeN"), "N-term specificity", value = custom_enzymeN)
+
 
       ## FDR
       updateNumericInput(session, NS("fdr", "target_fdr"), "Target FDR", value = cached_pars()$target_fdr, min = 1E-10)
       updateSelectInput(session,  NS("fdr", "fdr_type"), "FDR type", choices = c("protein", "peptide", "psm"),
                         selected = cached_pars()$fdr_type)
-      updateNumericInput(session, NS("fdr", "max_pepscores_co"), "Score threshold to warrent a PSM significance",
+      updateNumericInput(session, NS("fdr", "max_pepscores_co"), "Upper PSM score threshold",
                          value = cached_pars()$max_pepscores_co, min = 0)
-      updateNumericInput(session, NS("fdr", "min_pepscores_co"), "Score threshold to discard a PSM significance",
+      updateNumericInput(session, NS("fdr", "min_pepscores_co"), "Lower PSM score threshold",
                          value = cached_pars()$min_pepscores_co, min = 0)
-      updateNumericInput(session, NS("fdr", "max_protscores_co"), "Upper limit in protein score cut-offs",
+      updateNumericInput(session, NS("fdr", "max_protscores_co"), "Upper protein score threshold",
                          value = cached_pars()$max_protscores_co, min = 0)
-      updateNumericInput(session, NS("fdr", "max_protnpep_co"), "Max number of peptides to warrant a protein significance",
+      updateNumericInput(session, NS("fdr", "max_protnpep_co"), "Threshold peptides per protein",
                          value = cached_pars()$max_protnpep_co, min = 1)
       updateSelectInput(session, NS("fdr", "fdr_group"), "FDR group", fdr_groups,
                         selected = cached_pars()$fdr_group)

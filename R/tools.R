@@ -14,21 +14,22 @@ add_unimodUI <- function(id,
   sidebarLayout(
     sidebarPanel(
       fluidRow(
-        textInput(NS(id, "title"), label = "Title (do-not-use-space)",
-                  placeholder = "TMT10plexNterm+Gln->pyro-Glu"),
+        textInput(NS(id, "title"), label = "Title",
+                  placeholder = "TMT10plexNterm+Gln->pyro-Glu") |>
+          bslib::tooltip("Do-not-use-space"),
         textInput(NS(id, "full_name"), label = "Description",
                   placeholder = "Additive N-term TMT10 and Gln->pyro-Glu"),
         textInput(NS(id, "composition"), label = "Composition",
                   placeholder = "H(17) C(8) 13C(4) 15N O(2)"),
       ),
       fluidRow(
-        selectInput(NS(id, "site"), "Site", sites, selected = NULL, multiple = FALSE),
-        selectInput(NS(id, "position"), "Position", positions, selected = NULL, multiple = FALSE),
+        selectInput(NS(id, "site"), "AA site", sites, selected = NULL, multiple = FALSE),
+        selectInput(NS(id, "position"), "Modification position", positions, selected = NULL, multiple = FALSE),
         textInput(NS(id, "neuloss"), label = "Neutral loss", placeholder = "H(4) C O S"),
       ),
       fluidRow(
         actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries."),
-        actionButton(NS(id, "add"),  "Add",  class = "btn-success", title = "Adds a Unimod entry"),
+        actionButton(NS(id, "add"),  "Add",  class = "btn-warning", title = "Adds a Unimod entry"),
       ),
       textOutput(NS(id, "msg")),
       width = 4
@@ -113,6 +114,10 @@ add_unimodServer <- function(id)
                                      selection = "single",
                                      options = list(pageLength = 5))
       })
+
+      observeEvent(input$title, {
+        bslib::update_tooltip(session$ns("title"))
+      })
     }
   )
 }
@@ -135,8 +140,8 @@ remove_unimodUI <- function(id,
     sidebarPanel(
       fluidRow(
         textInput(NS(id, "title"), label = "Title", placeholder = "TMT10plexNterm+Gln->pyro-Glu"),
-        selectInput(NS(id, "site"), "Site", sites, selected = NULL, multiple = FALSE),
-        selectInput(NS(id, "position"), "Position", positions, selected = NULL, multiple = FALSE),
+        selectInput(NS(id, "site"), "AA site", sites, selected = NULL, multiple = FALSE),
+        selectInput(NS(id, "position"), "Modification position", positions, selected = NULL, multiple = FALSE),
       ),
       fluidRow(
         actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries."),
@@ -207,7 +212,7 @@ find_unimodUI <- function(id)
         textInput(NS(id, "unimod"), label = "Unimod",
                   placeholder = "Phospho (S)"),
         actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries."),
-        actionButton(NS(id, "find"), "Find", class = "btn-success",
+        actionButton(NS(id, "find"), "Find", class = "btn-warning",
                      title = "Finds a Unimod and applicable neutral losses"),
         h2(""),
         tableOutput(NS(id, "umod"))

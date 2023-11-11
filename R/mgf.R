@@ -17,8 +17,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       column(12, textInput(NS(id, "out_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project"))),
       column(4, shinyFiles::shinyDirButton(NS(id, "select_mgfpath"), "Peaklist path", "Please select a folder",
                                            style = "background-color: #f5f5f5") |>
-               bslib::tooltip("Formart mzML or MGF")),
-      ###
+               bslib::tooltip("mzML (no zlib compression) or MGF")),
       column(12, textInput(NS(id, "mgf_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project/mgf"))),
       column(4, shinyFiles::shinyDirButton(NS(id, "select_cachepath"), "Cache folder", "Please select a folder",
                                            style = "background-color: #f5f5f5")),
@@ -36,8 +35,6 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       column(4, numericInput(NS(id, "min_ret_time"), "Min retention time", 0)),
       column(4, numericInput(NS(id, "max_ret_time"), "Max retention time", Inf)),
     ),
-    # hr(),
-    # h4("Chimeric precursors (mzML)"),
     checkboxInput(NS(id, "is_mdda"), "Chimeric precursors", value = TRUE) |>
       bslib::tooltip("Require mzML format"),
     conditionalPanel(
@@ -45,13 +42,14 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       ns = ns,
       fluidRow(
         column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors", 1, min = 0) |>
-                 bslib::tooltip("0 - use MSConvert defaults ; 1 - use Mzion de-isotoping ; > 1 consider chimeric precursors")),
-        column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 1)),
+                 bslib::tooltip("0 - apply MSConvert defaults; 1 - apply Mzion de-isotoping; > 1 consider chimeric precursors")),
+        column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 1) |>
+                 bslib::tooltip("E.g. 6 preceding and 6 following MS1 spectra")),
         column(4, numericInput(NS(id, "ppm_ms1_deisotope"), "MS1 tolerance (ppm)", 8, min = 1)),
         column(4, numericInput(NS(id, "grad_isotope"), "Isotope-envelope gradient", 1.6, min = 1)),
         column(4, numericInput(NS(id, "fct_iso2"), "Fuzzy isotope-envelope gradient", 3, min = 1)),
         column(4, checkboxInput(NS(id, "use_defpeaks"), "Include defaults", value = FALSE) |>
-                 bslib::tooltip("Use MSConvert precursors if undetermined by Mzion")),
+                 bslib::tooltip("Use MSConvert precursors if not determined by Mzion")),
       ),
     ),
     checkboxInput(NS(id, "deisotope_ms2"), "De-isotope MS2 spectra", value = TRUE),
@@ -146,11 +144,17 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         if (grepl("^tmt", input$quant)) {
           output$tmt <- renderUI({
             fluidRow(
-              column(4, numericInput(NS(id, "ppm_reporters"), label = "Reporter tolerance (ppm)",
+              column(4, numericInput(NS(id, "ppm_reporters"),
+                                     label = "Reporter tolerance (ppm)",
+                                     # tags$span(style="color: #969696; border: #969696","Reporter tolerance (ppm)"),
                                      value = 10, min = 1)),
-              column(4, numericInput(NS(id, "tmt_reporter_lower"), label = "Reporter lower bound",
+              column(4, numericInput(NS(id, "tmt_reporter_lower"),
+                                     label = "Reporter lower bound (m/z)",
+                                     # tags$span(style="color: #969696; border: #969696","Reporter lower bound (m/z)"),
                                      value = 126.1, min = 0)),
-              column(4, numericInput(NS(id, "tmt_reporter_upper"), label = "Reporter upper bound",
+              column(4, numericInput(NS(id, "tmt_reporter_upper"),
+                                     label = "Reporter upper bound (m/z)",
+                                     # tags$span(style="color: #969696; border: #969696","Reporter upper bound (m/z)"),
                                      value = 135.2, min = 0)),
             )
           })
@@ -178,10 +182,10 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateNumericInput(session, "ppm_ms1_deisotope", "MS1 tolerance (ppm)", 8)
         updateNumericInput(session, "ppm_ms2_deisotope", "MS2 tolerance (ppm)", 8)
         updateNumericInput(session, "max_ms2_charge", "Max MS2 charge state", 3)
-        updateCheckboxInput(session, "is_mdda", "Chimeric precursors (mzML)", value = TRUE)
+        updateCheckboxInput(session, "is_mdda", "Chimeric precursors", value = TRUE)
         updateNumericInput(session, "grad_isotope", "Isotope-envelope gradient", 1.6)
         updateNumericInput(session, "fct_iso2", "Fuzzy isotope-envelope gradient", 3)
-        updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (0: do nothing)", 1)
+        updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors", 1)
         updateCheckboxInput(session, "use_defpeaks", "Include defaults", value = FALSE)
         updateCheckboxInput(session, "deisotope_ms2", "De-isotope MS2 spectra", value = TRUE)
         updateCheckboxInput(session, "exclude_reporter_region", "Exclude reporter region", value = FALSE)
@@ -192,8 +196,8 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
                         placeholder = "`1000` = 90, `1100` = 5, `4500` = 5")
         updateSelectInput(session, "quant", "Quantitation", quant, selected = "none")
         updateNumericInput(session, "ppm_reporters", "Reporter tolerance (ppm)", value = 10, min = 1)
-        updateNumericInput(session, "tmt_reporter_lower", "Reporter lower bound", value = 126.1, min = 0)
-        updateNumericInput(session, "tmt_reporter_upper", "Reporter upper bound", value = 135.2, min = 0)
+        updateNumericInput(session, "tmt_reporter_lower", "Reporter lower bound (m/z)", value = 126.1, min = 0)
+        updateNumericInput(session, "tmt_reporter_upper", "Reporter upper bound (m/z)", value = 135.2, min = 0)
       })
 
       # deisotope_ms2 <- eventReactive(input$ppm_ms2_deisotope, if (input$ppm_ms2_deisotope > 0) TRUE else FALSE)
@@ -213,12 +217,16 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         bslib::update_tooltip(session$ns("is_mdda"))
 
         if (!input$is_mdda) {
-          updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors (0: do nothing)", 0)
+          updateNumericInput(session, "maxn_mdda_precurs", "Number of precursors", 0)
         }
       })
 
       observeEvent(input$use_defpeaks, {
         bslib::update_tooltip(session$ns("use_defpeaks"))
+      })
+
+      observeEvent(input$n_mdda_flanks, {
+        bslib::update_tooltip(session$ns("n_mdda_flanks"))
       })
 
       list(mgf_path = reactive(input$mgf_path),

@@ -32,15 +32,21 @@ searchUI <- function(id)
     selectInput(NS(id, "enzyme"), "Enzyme", enzymes, selected = "Trypsin_P"),
     # uiOutput(NS(id, "nes")),
     numericInput(NS(id, "noenzyme_maxn"), "Max span of peptide lengths", value = 0) |>
-      bslib::tooltip(paste0("For search at noenzyme specificity. ",
+      bslib::tooltip(paste0("To circumvent RAM limits for search at noenzyme specificity. ",
                             "E.g. at the minimum peptide length of 7, ",
-                            "a setting of 15 corresponds to a sectional searchs at lengths 7-21, 22-36 etc.")),
-    checkboxInput(NS(id, "customenzyme"), "Custom enzyme"),
+                            "a setting of 15 corresponds to a sectional searchs at lengths 7-21, 22-36 etc. ",
+                            "The span will be automatically determined at the setting of 0.")),
+    checkboxInput(NS(id, "customenzyme"), "Custom enzyme") |>
+      bslib::tooltip("Enter a regular expression"),
     conditionalPanel(
       condition = "input.customenzyme == true",
       ns = NS(id),
-      textInput(NS(id, "custom_enzyme"), "Specificity (in regular expression)",
-                placeholder = "Cterm = NULL, Nterm = NULL")
+      fluidRow(
+        column(4, textInput(NS(id, "custom_enzymeC"), "C-term specificity") |>
+                 bslib::tooltip("Trypsin: ([KR]{1})([^P]{1})")),
+        column(4, textInput(NS(id, "custom_enzymeN"), "N-term specificity") |>
+                 bslib::tooltip("GluN: ([E]{1})")),
+      )
     ),
     actionButton(NS(id, "reset"), "Reset",
                  style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
@@ -76,10 +82,10 @@ searchServer <- function(id)
         updateNumericInput(session, "minn_ms2", "Min MS2 features", 6)
         updateSelectInput(session, "type_ms2ions", "MS2 fragments", c("by", "ax", "cz"), selected = "by")
         updateSelectInput(session, "enzyme", "Enzyme", enzymes, selected = "Trypsin_P")
-        updateCheckboxInput(session, "customenzyme", "Custom enzyme", value = FALSE)
         updateNumericInput(session, "noenzyme_maxn", "Max span of peptide lengths", value = 0)
-        updateTextInput(session, "custom_enzyme", "Specificity (in regular expression)", value = "",
-                        placeholder = "Cterm = NULL, Nterm = NULL")
+        updateCheckboxInput(session, "customenzyme", "Custom enzyme", value = FALSE)
+        updateTextInput(session, "custom_enzymeC", "C-term specificity", value = "")
+        updateTextInput(session, "custom_enzymeN", "N-term specificity", value = "")
       })
 
       if (FALSE) {
@@ -119,6 +125,14 @@ searchServer <- function(id)
         bslib::update_tooltip(session$ns("noenzyme_maxn"))
       })
 
+      observeEvent(input$customenzyme, {
+        if (!input$customenzyme) {
+          updateTextInput(session, "custom_enzymeC", "C-term specificity", value = "")
+          updateTextInput(session, "custom_enzymeN", "N-term specificity", value = "")
+        }
+      })
+
+
       list(min_len = reactive(input$min_len),
            max_len = reactive(input$max_len),
            max_miss = reactive(input$max_miss),
@@ -138,7 +152,8 @@ searchServer <- function(id)
            type_ms2ions = reactive(input$type_ms2ions),
            enzyme = reactive(input$enzyme),
            noenzyme_maxn = reactive(input$noenzyme_maxn),
-           custom_enzyme = reactive(input$custom_enzyme)
+           custom_enzymeC = reactive(input$custom_enzymeC),
+           custom_enzymeN = reactive(input$custom_enzymeN)
         )
     }
   )
