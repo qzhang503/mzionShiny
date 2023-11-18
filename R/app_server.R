@@ -220,9 +220,9 @@ app_server <- function(input, output, session)
   })
 
   ## Tools
-  add_unimodServer("add_unimod")
-  remove_unimodServer("remove_unimod")
-  find_unimodServer("find_unimod")
+  add_unimodServer("add_unimod", temp_dir = .temp_dir)
+  remove_unimodServer("remove_unimod", temp_dir = .temp_dir)
+  find_unimodServer("find_unimod", temp_dir = .temp_dir)
   map_ms2Server("map_ms2ions")
 
   ## mzion::matchMS parameters

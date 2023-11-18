@@ -4,7 +4,7 @@
 \alias{add_unimodServer}
 \title{Server-side processing of MGF parameters}
 \usage{
-add_unimodServer(id)
+add_unimodServer(id, temp_dir = NULL, file_umods = "unimods.txt")
 }
 \arguments{
 \item{id}{Namespace identifier.}

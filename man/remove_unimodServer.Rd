@@ -4,7 +4,7 @@
 \alias{remove_unimodServer}
 \title{Server-side processing of MGF parameters}
 \usage{
-remove_unimodServer(id)
+remove_unimodServer(id, temp_dir = NULL, file_umods = "unimods.txt")
 }
 \arguments{
 \item{id}{Namespace identifier.}

@@ -13,7 +13,9 @@ short_mods <- c("Carbamidomethyl (Anywhere = C)",
                 "TMT18plex (Anywhere = K)", "TMT18plex (Any N-term = N-term)")
 
 # table_unimods()
-umods <- mzion::table_unimods() |>
+.temp_dir <- tempdir()
+
+umods <- mzion::table_unimods(file.path(.temp_dir, "unimods.txt")) |>
   dplyr::mutate(modification = paste0(title, " (", position, " = ", site, ")")) |>
   dplyr::mutate(short = ifelse(modification %in% short_mods, TRUE, FALSE))
 

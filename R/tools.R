@@ -4,12 +4,12 @@
 #' @param sites Sites of amino-acid residues.
 #' @param positions Positions of modifications.
 add_unimodUI <- function(id,
-                     sites = c("A", "C", "D", "E", "F", "G", "H", "I", "K",
-                               "L", "M", "N", "P", "Q", "R", "S", "T", "W",
-                               "Y", "V", "U", "B", "X", "Z", "N-term",
-                               "C-term"),
-                     positions = c("Anywhere", "Any N-term", "Protein N-term",
-                                   "Any C-term", "Protein C-term"))
+                         sites = c("A", "C", "D", "E", "F", "G", "H", "I", "K",
+                                   "L", "M", "N", "P", "Q", "R", "S", "T", "W",
+                                   "Y", "V", "U", "B", "X", "Z", "N-term",
+                                   "C-term"),
+                         positions = c("Anywhere", "Any N-term", "Protein N-term",
+                                       "Any C-term", "Protein C-term"))
 {
   sidebarLayout(
     sidebarPanel(
@@ -45,7 +45,7 @@ add_unimodUI <- function(id,
 #' Server-side processing of MGF parameters
 #'
 #' @param id Namespace identifier.
-add_unimodServer <- function(id)
+add_unimodServer <- function(id, temp_dir = NULL, file_umods = "unimods.txt")
 {
   moduleServer(
     id,
@@ -103,13 +103,13 @@ add_unimodServer <- function(id)
                                             composition = nl))
 
           output$msg <- renderText(paste0("Unimod added: ", input$title, "."))
-          # umods(mzion::table_unimods())
+          # umods(mzion::table_unimods(file.path(.temp_dir, file_umods)))
           # output$table <- DT::renderDT(umods(), filter = "bottom", selection = "single", options = list(pageLength = 5))
         }
       })
 
       observeEvent(input$load, {
-        umods(mzion::table_unimods())
+        umods(mzion::table_unimods(file.path(.temp_dir, file_umods)))
         output$table <- DT::renderDT(umods(), filter = "bottom",
                                      selection = "single",
                                      options = list(pageLength = 5))
@@ -161,7 +161,7 @@ remove_unimodUI <- function(id,
 #' Server-side processing of MGF parameters
 #'
 #' @param id Namespace identifier.
-remove_unimodServer <- function(id)
+remove_unimodServer <- function(id, temp_dir = NULL, file_umods = "unimods.txt")
 {
   moduleServer(
     id,
@@ -184,12 +184,12 @@ remove_unimodServer <- function(id)
                                              position    = input$position))
 
         output$msg <- renderText(paste0("Unimod removed: ", input$title, "."))
-        # umods(mzion::table_unimods())
+        # umods(mzion::table_unimods(file.path(.temp_dir, file_umods)))
         # output$table <- DT::renderDT(umods(), filter = "bottom", selection = "single", options = list(pageLength = 5))
       })
 
       observeEvent(input$load, {
-        umods(mzion::table_unimods())
+        umods(mzion::table_unimods(file.path(.temp_dir, file_umods)))
         output$table <- DT::renderDT(umods(), filter = "bottom",
                                      selection = "single",
                                      options = list(pageLength = 5))
@@ -231,7 +231,7 @@ find_unimodUI <- function(id)
 #' Server-side processing of MGF parameters
 #'
 #' @param id Namespace identifier.
-find_unimodServer <- function(id)
+find_unimodServer <- function(id, temp_dir = NULL, file_umods = "unimods.txt")
 {
   moduleServer(
     id,
@@ -265,7 +265,7 @@ find_unimodServer <- function(id)
       output$umod <- renderTable(umod())
 
       observeEvent(input$load, {
-        umods(mzion::table_unimods() |>
+        umods(mzion::table_unimods(file.path(.temp_dir, file_umods)) |>
                 dplyr::mutate(modification = paste0(title, " (", position, " = ", site, ")")))
 
         output$table <- DT::renderDT(umods(), filter = "bottom",
