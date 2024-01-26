@@ -21,7 +21,7 @@ map_ms2UI <- function(id, type_ms2ions = c("by", "ax", "cz"))
         column(3, numericInput(NS(id, "width"), "Image width", 12)),
         column(3, numericInput(NS(id, "height"), "Image height", 6)),
       ),
-      actionButton(NS(id, "view"), "View", style = "background-color:#41ab5d; width:70px;
+      actionButton(NS(id, "view"), "View", style = "background-color:#41ab5d; width:200px;
                  font-size:100%; color:white"),
       width = 4
     ),

@@ -7,7 +7,7 @@ fdrUI <- function(id)
     fluidRow(
       column(4, numericInput(NS(id, "target_fdr"), "Target FDR", value = 0.01, min = 1E-10)),
       column(4, selectInput(NS(id, "fdr_type"), "FDR type", c("protein", "peptide", "psm"))),
-      column(4, numericInput(NS(id, "max_pepscores_co"), "Upper PSM score threshold", value = 50, min = 0) |>
+      column(4, numericInput(NS(id, "max_pepscores_co"), "Upper PSM score threshold", value = 70, min = 0) |>
                bslib::tooltip("to warrent a PSM significance")),
       column(4, numericInput(NS(id, "min_pepscores_co"), "Lower PSM score threshold", value = 0, min = 0) |>
                bslib::tooltip("to discard a PSM significance")),
@@ -58,7 +58,7 @@ fdrServer <- function(id)
       observeEvent(input$reset, {
         updateNumericInput(session, "target_fdr", "Target FDR", value = 0.01, min = 1E-10)
         updateSelectInput(session, "fdr_type", "FDR type", c("protein", "peptide", "psm"))
-        updateNumericInput(session, "max_pepscores_co", "Upper PSM score threshold", value = 50, min = 0)
+        updateNumericInput(session, "max_pepscores_co", "Upper PSM score threshold", value = 70, min = 0)
         updateNumericInput(session, "min_pepscores_co", "Lower PSM score threshold", value = 0, min = 0)
         updateNumericInput(session, "max_protscores_co", "Upper protein score threshold", value = Inf, min = 0)
         updateNumericInput(session, "max_protnpep_co", "Threshold peptides per protein", value = 10, min = 1)
