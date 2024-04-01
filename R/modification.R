@@ -67,7 +67,7 @@ modUI <- function(id)
     #   )
     # ),
     actionButton(ns("reset"), "Reset",
-                 style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
+                 style = "width:120px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
                  title = "Reset values in the current tab"),
   )
 }
@@ -88,7 +88,8 @@ modServer <- function(id)
                           selected = "Carbamidomethyl (Anywhere = C)")
         updateSelectInput(session = session, inputId = "varmods", choices = choices,
                           selected = c("Acetyl (Protein N-term = N-term)", "Oxidation (Anywhere = M)",
-                                       "Deamidated (Anywhere = N)", "Deamidated (Anywhere = Q)"))
+                                       "Deamidated (Anywhere = N)", "Deamidated (Anywhere = Q)",
+                                       "TMT10plex (Any N-term = N-term)", "TMT10plex (Anywhere = K)"))
         updateSelectInput(session = session, inputId = "locmods", choices = choices,
                           selected = c("Oxidation (Anywhere = M)", "Deamidated (Anywhere = N)",
                                        "Deamidated (Anywhere = Q)"))

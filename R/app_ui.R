@@ -126,21 +126,21 @@ app_ui <- function(request) {
           align = "center",
           column(
             1,
-            splitLayout(cellWidths = 70,
+            splitLayout(cellWidths = 140,
                         shinyFiles::shinyFilesButton("loadpars", "Reload", "Please select a file",
                                                      filetype = list(text = "pars"), multiple = FALSE,
                                                      viewtype = "detail",
-                                                     style = "background-color:#43a2ca; width:70px;
+                                                     style = "background-color:#43a2ca; width:120px;
                                                      font-size:100%; color:white") |>
                           bslib::tooltip("Reload search parameters"),
                         shinyFiles::shinySaveButton("savepars", "Save", "Save file",
                                                     filetype = list(text = "pars"), viewtype = "icon",
-                                                    style = "background-color:#43a2ca; width:70px;
+                                                    style = "background-color:#43a2ca; width:120px;
                                                     font-size:100%; color:white") |>
                           bslib::tooltip("Save search parameters"),
-                        actionButton("submit", "Submit", style = "background-color:#41ab5d; width:70px;
+                        actionButton("submit", "Submit", style = "background-color:#41ab5d; width:120px;
                              font-size:100%; color:white"),
-                        actionButton("cancel", "Cancel", style = "background-color:#a50f15; width:70px;
+                        actionButton("cancel", "Cancel", style = "background-color:#a50f15; width:120px;
                              font-size:100%; color:white"),
             )
           ),

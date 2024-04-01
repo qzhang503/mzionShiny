@@ -18,8 +18,8 @@ map_ms2UI <- function(id, type_ms2ions = c("by", "ax", "cz"))
       checkboxInput(NS(id, "is_decoy"), "Is decoy", value = FALSE),
       textInput(NS(id, "out_name"), "Output file name", placeholder = file.path("bar.png")),
       fluidRow(
-        column(3, numericInput(NS(id, "width"), "Image width", 12)),
-        column(3, numericInput(NS(id, "height"), "Image height", 6)),
+        column(3, numericInput(NS(id, "width "), "Image width ", 12), style = "width: 160px;"),
+        column(3, numericInput(NS(id, "height"), "Image height", 8), style = "width: 160px;"),
       ),
       actionButton(NS(id, "view"), "View", style = "background-color:#41ab5d; width:200px;
                  font-size:100%; color:white"),

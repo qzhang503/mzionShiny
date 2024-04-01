@@ -28,8 +28,10 @@ add_unimodUI <- function(id,
         textInput(NS(id, "neuloss"), label = "Neutral loss", placeholder = "H(4) C O S"),
       ),
       fluidRow(
-        actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries."),
-        actionButton(NS(id, "add"),  "Add",  class = "btn-warning", title = "Adds a Unimod entry"),
+        actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries.",
+                     style = "width:120px"),
+        actionButton(NS(id, "add"),  "Add",  class = "btn-warning", title = "Adds a Unimod entry",
+                     style = "width:120px"),
       ),
       textOutput(NS(id, "msg")),
       width = 4
@@ -144,8 +146,10 @@ remove_unimodUI <- function(id,
         selectInput(NS(id, "position"), "Modification position", positions, selected = NULL, multiple = FALSE),
       ),
       fluidRow(
-        actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries."),
-        actionButton(NS(id, "remove"), "Remove", class = "btn-danger", title = "Removes a Unimod entry"),
+        actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries.",
+                     style = "width:120px"),
+        actionButton(NS(id, "remove"), "Remove", class = "btn-danger", title = "Removes a Unimod entry",
+                     style = "width:120px"),
       ),
       textOutput(NS(id, "msg")),
       width = 4
@@ -211,11 +215,17 @@ find_unimodUI <- function(id)
       fluidRow(
         textInput(NS(id, "unimod"), label = "Unimod",
                   placeholder = "Phospho (S)"),
-        actionButton(NS(id, "load"), "Load", class = "btn-success", title = "Loads all Unimod entries."),
-        actionButton(NS(id, "find"), "Find", class = "btn-warning",
-                     title = "Finds a Unimod and applicable neutral losses"),
+
         h2(""),
         tableOutput(NS(id, "umod"))
+      ),
+      fluidRow(
+        actionButton(NS(id, "load"), "Load", class = "btn-success",
+                     title = "Loads all Unimod entries.",
+                     style = "width:120px; height:40px"),
+        actionButton(NS(id, "find"), "Find", class = "btn-warning",
+                     title = "Finds a Unimod and applicable neutral losses",
+                     style = "width:120px; height:40px"),
       ),
       textOutput(NS(id, "msg")),
       width = 4

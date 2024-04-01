@@ -9,7 +9,13 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
   tagList(
     fluidRow(
       column(4, selectInput(NS(id, "quant"), "Quantitation", quant, selected = "none")),
-    ),
+    ) |>
+      bslib::tooltip("Choice 'none' for LFQ."),
+
+    checkboxInput(NS(id, "use_lfq_intensity"), "Apply LFQ intensity", value = TRUE) |>
+      bslib::tooltip("Apply LFQ precursor intenisty for label-free or TMT);
+                     May leave it checked with TMT data."),
+
     uiOutput(NS(id, "tmt")),
     fluidRow(
       column(4, shinyFiles::shinyDirButton(NS(id, "select_outpath"), "Output path", "Please select a folder",
@@ -17,7 +23,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       column(12, textInput(NS(id, "out_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project"))),
       column(4, shinyFiles::shinyDirButton(NS(id, "select_mgfpath"), "Peaklist path", "Please select a folder",
                                            style = "background-color: #f5f5f5") |>
-               bslib::tooltip("mzML (no zlib compression) or MGF")),
+               bslib::tooltip("Thermo's RAW, mzML (no zlib compression) or MGF")),
       column(12, textInput(NS(id, "mgf_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project/mgf"))),
       column(4, shinyFiles::shinyDirButton(NS(id, "select_cachepath"), "Cache folder", "Please select a folder",
                                            style = "background-color: #f5f5f5")),
@@ -77,7 +83,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
     ),
     checkboxInput(NS(id, "exclude_reporter_region"), "Exclude reporter region", value = FALSE),
     actionButton(NS(id, "reset"), "Reset",
-                 style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
+                 style = "width:120px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
                  title = "Reset values in the current tab"),
   )
 }
@@ -229,6 +235,10 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         bslib::update_tooltip(session$ns("n_mdda_flanks"))
       })
 
+      observeEvent(input$use_lfq_intensity, {
+        bslib::update_tooltip(session$ns("use_lfq_intensity"))
+      })
+
       list(mgf_path = reactive(input$mgf_path),
            min_ms1_charge = reactive(input$min_ms1_charge),
            max_ms1_charge = reactive(input$max_ms1_charge),
@@ -251,6 +261,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
            grad_isotope = reactive(input$grad_isotope),
            fct_iso2 = reactive(input$fct_iso2),
            maxn_mdda_precurs = reactive(input$maxn_mdda_precurs),
+           use_lfq_intensity = reactive(input$use_lfq_intensity),
            calib_ms1mass = reactive(input$calib_ms1mass),
            ppm_ms1calib = reactive(input$ppm_ms1calib),
            cut_ms2ions = reactive(input$cut_ms2ions),

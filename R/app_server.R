@@ -100,6 +100,7 @@ app_server <- function(input, output, session)
   grad_isotope <- mgfs$grad_isotope
   fct_iso2 <- mgfs$fct_iso2
   maxn_mdda_precurs <- mgfs$maxn_mdda_precurs
+  use_lfq_intensity <- mgfs$use_lfq_intensity
 
   # output$quant <- renderPrint(paste0("quant: ", quant() ))
   # output$ppm_reporters <- renderPrint(paste0("ppm_reporters: ", ppm_reporters() ))
@@ -298,6 +299,7 @@ app_server <- function(input, output, session)
       fct_iso2 = fct_iso2(),
       n_mdda_flanks = n_mdda_flanks(),
       maxn_mdda_precurs = maxn_mdda_precurs(),
+      use_lfq_intensity = use_lfq_intensity(),
 
       use_ms1_cache = use_ms1_cache(),
       .path_cache = .path_cache(),
@@ -436,6 +438,8 @@ app_server <- function(input, output, session)
                          value = cached_pars()$max_ms2_charge)
       updateNumericInput(session, NS("mgf", "maxn_mdda_precurs"), "Number of precursors",
                          value = cached_pars()$maxn_mdda_precurs)
+      updateCheckboxInput(session, NS("mgf", "use_lfq_intensity"), "Apply LFQ intensity",
+                          value = cached_pars()$use_lfq_intensity)
       updateCheckboxInput(session, NS("mgf", "use_defpeaks"), "Include defaults",
                           value = cached_pars()$use_defpeaks)
       updateCheckboxInput(session, NS("mgf", "deisotope_ms2"), "De-isotope MS2 spectra",

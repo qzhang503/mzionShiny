@@ -41,7 +41,7 @@ fdrUI <- function(id)
       ),
     ),
     actionButton(NS(id, "reset"), "Reset",
-                 style = "width:70px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
+                 style = "width:120px; background-color:#c51b8a; border-color:#f0f0f0; color:white",
                  title = "Reset values in the current tab"),
   )
 }
