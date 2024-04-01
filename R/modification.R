@@ -85,11 +85,14 @@ modServer <- function(id)
       observeEvent(use_short_mods(), {
         choices <- if (use_short_mods()) short_mods else umods$modification
         updateSelectInput(session = session, inputId = "fixedmods", choices = choices,
-                          selected = "Carbamidomethyl (Anywhere = C)")
+                          selected = c("Carbamidomethyl (Anywhere = C)",
+                                       "TMT10plex (Any N-term = N-term)",
+                                       "TMT10plex (Anywhere = K)"))
         updateSelectInput(session = session, inputId = "varmods", choices = choices,
-                          selected = c("Acetyl (Protein N-term = N-term)", "Oxidation (Anywhere = M)",
-                                       "Deamidated (Anywhere = N)", "Deamidated (Anywhere = Q)",
-                                       "TMT10plex (Any N-term = N-term)", "TMT10plex (Anywhere = K)"))
+                          selected = c("Acetyl (Protein N-term = N-term)",
+                                       "Oxidation (Anywhere = M)",
+                                       "Deamidated (Anywhere = N)",
+                                       "Deamidated (Anywhere = Q)"))
         updateSelectInput(session = session, inputId = "locmods", choices = choices,
                           selected = c("Oxidation (Anywhere = M)", "Deamidated (Anywhere = N)",
                                        "Deamidated (Anywhere = Q)"))
@@ -100,7 +103,9 @@ modServer <- function(id)
       observeEvent(input$reset, {
         updateCheckboxInput(session, "use_short_mods", "Short list", value = TRUE)
         updateSelectInput(session, "fixedmods", "Fixed modifications",  umods_short$modification,
-                          selected = "Carbamidomethyl (Anywhere = C)")
+                          selected = c("Carbamidomethyl (Anywhere = C)",
+                                       "TMT10plex (Any N-term = N-term)",
+                                       "TMT10plex (Anywhere = K)"))
         updateSelectInput(session, "varmods", "Variable modifications", umods_short$modification,
                           selected = c("Acetyl (Protein N-term = N-term)", "Oxidation (Anywhere = M)",
                                        "Deamidated (Anywhere = N)", "Deamidated (Anywhere = Q)"))
