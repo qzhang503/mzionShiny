@@ -10,7 +10,7 @@ fdrUI <- function(id)
       column(4, numericInput(NS(id, "max_pepscores_co"), "Upper PSM score threshold", value = 70, min = 0) |>
                bslib::tooltip("to warrent a PSM significance")),
       column(4, numericInput(NS(id, "min_pepscores_co"), "Lower PSM score threshold", value = 0, min = 0) |>
-               bslib::tooltip("to discard a PSM significance")),
+               bslib::tooltip("to discard a PSM significance; e.g., may consider a value of 30")),
       column(4, numericInput(NS(id, "max_protscores_co"), "Upper protein score threshold", value = Inf, min = 0)),
       column(4, numericInput(NS(id, "max_protnpep_co"), "Threshold peptides per protein", value = 10, min = 1) |>
                bslib::tooltip("E.g., warrant a protein significance with >= 10 identifying peptides")),

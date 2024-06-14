@@ -334,7 +334,9 @@ app_server <- function(input, output, session)
   })
 
   ## Save parameters
-  volume0 <- c(Home = fs::path_home_r(), Home_win = fs::path_home(), shinyFiles::getVolumes()())
+  volume0 <- c(Workflows = system.file("extdata/workflows", package = "mzionShiny"),
+               Home = fs::path_home_r(), Home_win = fs::path_home(),
+               shinyFiles::getVolumes()())
   volumes <- reactive(c(Project = out_path(), volume0))
 
   observeEvent(input$savepars, {

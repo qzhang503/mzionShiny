@@ -49,7 +49,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       fluidRow(
         column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors", 1, min = 0) |>
                  bslib::tooltip("0 - apply MSConvert defaults; 1 - apply Mzion de-isotoping; > 1 consider chimeric precursors")),
-        column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 1) |>
+        column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 0) |>
                  bslib::tooltip("E.g. 6 preceding and 6 following MS1 spectra")),
         column(4, numericInput(NS(id, "ppm_ms1_deisotope"), "MS1 tolerance (ppm)", 8, min = 1)),
         column(4, numericInput(NS(id, "grad_isotope"), "Isotope-envelope gradient", 1.6, min = 1)),

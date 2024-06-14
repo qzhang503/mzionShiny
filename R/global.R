@@ -12,7 +12,6 @@ short_mods <- c("Carbamidomethyl (Anywhere = C)",
                 "TMT16plex (Anywhere = K)", "TMT16plex (Any N-term = N-term)",
                 "TMT18plex (Anywhere = K)", "TMT18plex (Any N-term = N-term)")
 
-# table_unimods()
 .temp_dir <- tempdir()
 
 umods <- mzion::table_unimods(file.path(.temp_dir, "unimods.txt")) |>

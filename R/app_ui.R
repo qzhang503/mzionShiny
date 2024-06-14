@@ -132,7 +132,7 @@ app_ui <- function(request) {
                                                      viewtype = "detail",
                                                      style = "background-color:#43a2ca; width:120px;
                                                      font-size:100%; color:white") |>
-                          bslib::tooltip("Reload search parameters"),
+                          bslib::tooltip("Reload search parameters or pre-compiled workflows (directory: Workflows)"),
                         shinyFiles::shinySaveButton("savepars", "Save", "Save file",
                                                     filetype = list(text = "pars"), viewtype = "icon",
                                                     style = "background-color:#43a2ca; width:120px;
