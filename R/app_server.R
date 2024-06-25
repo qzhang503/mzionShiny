@@ -84,6 +84,7 @@ app_server <- function(input, output, session)
   exclude_reporter_region <- mgfs$exclude_reporter_region
   calib_ms1mass <- mgfs$calib_ms1mass
   ppm_ms1calib <- mgfs$ppm_ms1calib
+  ppm_ms2calib <- mgfs$ppm_ms2calib
   cut_ms2ions <- mgfs$cut_ms2ions
   topn_ms2ion_cuts <- mgfs$topn_ms2ion_cuts # ""
   quant <- mgfs$quant
@@ -119,6 +120,7 @@ app_server <- function(input, output, session)
   # output$exclude_reporter_region <-renderPrint(paste0("exclude_reporter_region: ", exclude_reporter_region() ))
   # output$calib_ms1mass <-renderPrint(paste0("calib_ms1mass: ", calib_ms1mass() ))
   # output$ppm_ms1calib <-renderPrint(paste0("ppm_ms1calib: ", ppm_ms1calib() ))
+  # output$ppm_ms2calib <-renderPrint(paste0("ppm_ms2calib: ", ppm_ms2calib() ))
   # output$max_scan_num_new <-renderPrint(paste0("max_scan_num: ", max_scan_num_new() ))
   # output$max_ret_time_new <-renderPrint(paste0("max_ret_time: ", max_ret_time_new() ))
   # output$topn_ms2ion_cuts_new <-renderPrint(paste0("topn_ms2ion_cuts: ", topn_ms2ion_cuts_new() ))
@@ -314,6 +316,7 @@ app_server <- function(input, output, session)
       max_ret_time = max_ret_time_new(), # Inf
       calib_ms1mass = calib_ms1mass(),
       ppm_ms1calib = ppm_ms1calib(),
+      ppm_ms2calib = ppm_ms2calib(),
       # add_ms2theos = FALSE,
       # add_ms2theos2 = FALSE,
       # add_ms2moverzs = FALSE,

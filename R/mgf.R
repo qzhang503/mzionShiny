@@ -72,7 +72,9 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
     conditionalPanel(
       condition = "input.calib_ms1mass == true",
       ns = ns,
-      numericInput(NS(id, "ppm_ms1calib"), "Calibration mass tolerance (ppm)", 10),
+      numericInput(NS(id, "ppm_ms1calib"), "MS1 Calibration mass tolerance (ppm)", 10) |>
+        bslib::tooltip("May choose a high value, e.g. 40 ppm, if there is a systemic bias."),
+      numericInput(NS(id, "ppm_ms2calib"), "MS2 Calibration mass tolerance (ppm)", 10),
     ),
     checkboxInput(NS(id, "cut_ms2ions"), "Cut MS2 by regions"),
     conditionalPanel(
@@ -196,7 +198,8 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateCheckboxInput(session, "deisotope_ms2", "De-isotope MS2 spectra", value = TRUE)
         updateCheckboxInput(session, "exclude_reporter_region", "Exclude reporter region", value = FALSE)
         updateCheckboxInput(session, "calib_ms1mass", "Calibrate masses", value = FALSE)
-        updateNumericInput(session, "ppm_ms1calib", "Calibration mass tolerance (ppm)", 10)
+        updateNumericInput(session, "ppm_ms1calib", "MS1 calibration mass tolerance (ppm)", 10)
+        updateNumericInput(session, "ppm_ms2calib", "MS2 calibration mass tolerance (ppm)", 10)
         updateCheckboxInput(session, "cut_ms2ions", "Cut MS2 by regions", value = FALSE)
         updateTextInput(session, "topn_ms2ion_cuts", "Cuts (m/z = percent)", value = NA,
                         placeholder = "`1000` = 90, `1100` = 5, `4500` = 5")
@@ -264,6 +267,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
            use_lfq_intensity = reactive(input$use_lfq_intensity),
            calib_ms1mass = reactive(input$calib_ms1mass),
            ppm_ms1calib = reactive(input$ppm_ms1calib),
+           ppm_ms2calib = reactive(input$ppm_ms2calib),
            cut_ms2ions = reactive(input$cut_ms2ions),
            topn_ms2ion_cuts = reactive(input$topn_ms2ion_cuts),
            .path_cache = reactive(input$.path_cache),
