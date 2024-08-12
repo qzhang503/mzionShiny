@@ -18,7 +18,7 @@ map_ms2UI <- function(id, type_ms2ions = c("by", "ax", "cz"))
       checkboxInput(NS(id, "is_decoy"), "Is decoy", value = FALSE),
       textInput(NS(id, "out_name"), "Output file name", placeholder = file.path("bar.png")),
       fluidRow(
-        column(3, numericInput(NS(id, "width "), "Image width ", 12), style = "width: 160px;"),
+        column(3, numericInput(NS(id, "width"), "Image width ", 12), style = "width: 160px;"),
         column(3, numericInput(NS(id, "height"), "Image height", 8), style = "width: 160px;"),
       ),
       actionButton(NS(id, "view"), "View", style = "background-color:#41ab5d; width:200px;
@@ -85,11 +85,13 @@ map_ms2Server <- function(id, type_ms2ions = c("by", "ax", "cz"),
         shinyjs::toggleState("view")
         ans <- mzion::mapMS2ions(out_path = gsub("(.*)/[^/]+", "\\1", input$in_name),
                                  in_name = gsub(".*/([^/]+)", "\\1", input$in_name),
-                                 out_name = input$out_name, raw_file = input$raws,
+                                 out_name = input$out_name,
+                                 raw_file = input$raws,
                                  scan = input$scan, rank = input$rank,
                                  is_decoy = input$is_decoy,
                                  type_ms2ions = input$type_ms2ions,
-                                 width = input$width, height = input$height)
+                                 width = as.numeric(input$width),
+                                 height = as.numeric(input$height))
         shinyjs::toggleState("view")
 
         ans
