@@ -171,6 +171,20 @@ fastaUI <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_acc"
       ),
     ),
     br(),
+    fluidRow(
+      column(8,
+             shinyFiles::shinyFilesButton(NS(id, "select_5"), "Select a FASTA file", "Select Files",
+                                          multiple = FALSE, style = "background-color: #f5f5f5"),
+             textInput(NS(id, "fasta_5"), "Database 5", value = "", placeholder = file.path("~/Mzion/DB/db5.fasta")),
+             radioButtons(NS(id, "acc_type_5"), "Accession type 5", accessions),
+             checkboxInput(NS(id, "custom_accpat_5"), "Custom accession 5"),
+             conditionalPanel(
+               condition = "input.custom_accpat_5 == true",
+               ns = ns,
+               textInput(NS(id, "acc_pattern_5"), "Accession pattern 5"), NULL),
+      ),
+    ),
+    br(),
   )
 }
 
@@ -203,10 +217,14 @@ fastaServer <- function(id, accessions = c("uniprot_acc", "uniprot_id", "refseq_
       fasta_4 <- reactive(unname(shinyFiles::parseFilePaths(volumes, input$select_4)[, "datapath", drop = TRUE]))
       observeEvent(input$select_4, { updateTextInput(session, "fasta_4", NULL, value = fasta_4()) })
 
-      fas_ids <- reactive(paste0("fasta_", 1:4))
-      acc_ids <- reactive(paste0("acc_type_", 1:4))
-      pat_ids <- reactive(paste0("acc_pattern_", 1:4))
-      use_cuspat_ids <- reactive(paste0("use_custom_pat_", 1:4))
+      shinyFiles::shinyFileChoose(input, "select_5", roots = volumes, filetypes = c("fasta", "fas"))
+      fasta_5 <- reactive(unname(shinyFiles::parseFilePaths(volumes, input$select_5)[, "datapath", drop = TRUE]))
+      observeEvent(input$select_5, { updateTextInput(session, "fasta_5", NULL, value = fasta_5()) })
+
+      fas_ids <- reactive(paste0("fasta_", 1:5))
+      acc_ids <- reactive(paste0("acc_type_", 1:5))
+      pat_ids <- reactive(paste0("acc_pattern_", 1:5))
+      use_cuspat_ids <- reactive(paste0("use_custom_pat_", 1:5))
 
       fastas <- reactive({ unlist(lapply(fas_ids(), function (x) input[[x]] %||% "")) })
       acc_types <- reactive({ unlist(lapply(acc_ids(), function (x) input[[x]] %||% "")) })

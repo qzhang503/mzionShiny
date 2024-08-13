@@ -42,13 +42,12 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       column(4, numericInput(NS(id, "max_ret_time"), "Max retention time", Inf)),
     ),
     checkboxInput(NS(id, "is_mdda"), "Chimeric precursors", value = TRUE) |>
-      bslib::tooltip("Require mzML format"),
+      bslib::tooltip("Require RAW format"),
     conditionalPanel(
       condition = "input.is_mdda == true",
       ns = ns,
       fluidRow(
-        column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors", 1, min = 0) |>
-                 bslib::tooltip("0 - apply MSConvert defaults; 1 - apply Mzion de-isotoping; > 1 consider chimeric precursors")),
+        column(4, numericInput(NS(id, "maxn_mdda_precurs"), "Number of precursors", 1, min = 0)),
         column(4, numericInput(NS(id, "n_mdda_flanks"), "Number of flanking MS1 spectra", 6, min = 0) |>
                  bslib::tooltip("E.g. 6 preceding and 6 following MS1 spectra")),
         column(4, numericInput(NS(id, "ppm_ms1_deisotope"), "MS1 tolerance (ppm)", 8, min = 1)),
