@@ -82,7 +82,7 @@ app_server <- function(input, output, session)
   max_ret_time <- mgfs$max_ret_time # NA
   topn_ms2ions <- mgfs$topn_ms2ions
   exclude_reporter_region <- mgfs$exclude_reporter_region
-  calib_ms1mass <- mgfs$calib_ms1mass
+  calib_masses <- mgfs$calib_masses
   ppm_ms1calib <- mgfs$ppm_ms1calib
   ppm_ms2calib <- mgfs$ppm_ms2calib
   cut_ms2ions <- mgfs$cut_ms2ions
@@ -118,7 +118,7 @@ app_server <- function(input, output, session)
   # output$min_ret_time <-renderPrint(paste0("min_ret_time: ", min_ret_time() ))
   # output$topn_ms2ions <-renderPrint(paste0("topn_ms2ions: ", topn_ms2ions() ))
   # output$exclude_reporter_region <-renderPrint(paste0("exclude_reporter_region: ", exclude_reporter_region() ))
-  # output$calib_ms1mass <-renderPrint(paste0("calib_ms1mass: ", calib_ms1mass() ))
+  # output$calib_masses <-renderPrint(paste0("calib_masses: ", calib_masses() ))
   # output$ppm_ms1calib <-renderPrint(paste0("ppm_ms1calib: ", ppm_ms1calib() ))
   # output$ppm_ms2calib <-renderPrint(paste0("ppm_ms2calib: ", ppm_ms2calib() ))
   # output$max_scan_num_new <-renderPrint(paste0("max_scan_num: ", max_scan_num_new() ))
@@ -314,7 +314,7 @@ app_server <- function(input, output, session)
       max_scan_num = max_scan_num_new(), # .Machine$integer.max
       min_ret_time = min_ret_time(),
       max_ret_time = max_ret_time_new(), # Inf
-      calib_ms1mass = calib_ms1mass(),
+      calib_masses = calib_masses(),
       ppm_ms1calib = ppm_ms1calib(),
       ppm_ms2calib = ppm_ms2calib(),
       # add_ms2theos = FALSE,
@@ -451,7 +451,7 @@ app_server <- function(input, output, session)
                           value = cached_pars()$deisotope_ms2)
       updateCheckboxInput(session, NS("mgf", "exclude_reporter_region"), "Exclude reporter region",
                           value = cached_pars()$exclude_reporter_region)
-      updateCheckboxInput(session, NS("mgf", "calib_ms1mass"), "Mass calibration", value = cached_pars()$calib_ms1mass)
+      updateCheckboxInput(session, NS("mgf", "calib_masses"), "Mass calibration", value = cached_pars()$calib_masses)
       updateNumericInput(session, NS("mgf", "ppm_ms1calib"), "Calibration mass tolerance (ppm)",
                          value = cached_pars()$ppm_ms1calib)
       updateCheckboxInput(session, NS("mgf", "cut_ms2ions"), "Cut MS2 by regions", cached_pars()$cut_ms2ions)

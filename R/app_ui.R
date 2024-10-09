@@ -43,7 +43,7 @@ app_ui <- function(request) {
         # textOutput("max_ret_time_new"),
         # textOutput("topn_ms2ions"),
         # textOutput("exclude_reporter_region"),
-        # textOutput("calib_ms1mass"),
+        # textOutput("calib_masses"),
         # textOutput("ppm_ms1calib"),
         # textOutput("topn_ms2ion_cuts_new"),
         # textOutput("quant"),

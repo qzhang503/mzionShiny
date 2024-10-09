@@ -67,9 +67,9 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       ),
     ),
     hr(),
-    checkboxInput(NS(id, "calib_ms1mass"), "Calibrate masses"),
+    checkboxInput(NS(id, "calib_masses"), "Calibrate masses", value = TRUE),
     conditionalPanel(
-      condition = "input.calib_ms1mass == true",
+      condition = "input.calib_masses == true",
       ns = ns,
       numericInput(NS(id, "ppm_ms1calib"), "MS1 Calibration mass tolerance (ppm)", 10) |>
         bslib::tooltip("May choose a high value, e.g. 40 ppm, if there is a systemic bias."),
@@ -196,7 +196,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
         updateCheckboxInput(session, "use_defpeaks", "Include defaults", value = FALSE)
         updateCheckboxInput(session, "deisotope_ms2", "De-isotope MS2 spectra", value = TRUE)
         updateCheckboxInput(session, "exclude_reporter_region", "Exclude reporter region", value = FALSE)
-        updateCheckboxInput(session, "calib_ms1mass", "Calibrate masses", value = FALSE)
+        updateCheckboxInput(session, "calib_masses", "Calibrate masses", value = FALSE)
         updateNumericInput(session, "ppm_ms1calib", "MS1 calibration mass tolerance (ppm)", 10)
         updateNumericInput(session, "ppm_ms2calib", "MS2 calibration mass tolerance (ppm)", 10)
         updateCheckboxInput(session, "cut_ms2ions", "Cut MS2 by regions", value = FALSE)
@@ -264,7 +264,7 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
            fct_iso2 = reactive(input$fct_iso2),
            maxn_mdda_precurs = reactive(input$maxn_mdda_precurs),
            use_lfq_intensity = reactive(input$use_lfq_intensity),
-           calib_ms1mass = reactive(input$calib_ms1mass),
+           calib_masses = reactive(input$calib_masses),
            ppm_ms1calib = reactive(input$ppm_ms1calib),
            ppm_ms2calib = reactive(input$ppm_ms2calib),
            cut_ms2ions = reactive(input$cut_ms2ions),
