@@ -23,8 +23,8 @@ app_ui <- function(request) {
       # theme = bslib::bs_theme(bootswatch = "cerulean"),
       # theme = bslib::bs_theme(preset = "shiny"),
       theme = bslib::bs_theme(),
-      title = a("Mzion", href = "https://github.com/qzhang503/mzion/"),
-      # title = "Mzion",
+      # title = a("Mzion", href = "https://github.com/qzhang503/mzion/"),
+      title = "Mzion",
       id = "Mzion",
 
       tabPanel(

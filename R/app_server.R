@@ -413,9 +413,9 @@ app_server <- function(input, output, session)
       updateNumericInput(session, NS("mgf", "tmt_reporter_upper"), "Reporter upper bound (m/z)",
                          value = cached_pars()$tmt_reporter_upper)
       updateTextInput(session, NS("mgf", "out_path"), NULL, value = cached_pars()$out_path,
-                      placeholder = file.path("~/Mzion/My_Project"))
+                      placeholder = file.path("~/Mzion/My_Project/Out"))
       updateTextInput(session, NS("mgf", "mgf_path"), NULL, value = cached_pars()$mgf_path,
-                      placeholder = "~/Mzion/My_project/mgf")
+                      placeholder = "~/Mzion/My_Project/RAWDATA")
       updateTextInput(session, NS("mgf", ".path_cache"), NULL,
                       value = cached_pars()$.path_cache)
       updateNumericInput(session, NS("mgf", "min_ms1_charge"), "Min MS1 charge state",
@@ -452,8 +452,10 @@ app_server <- function(input, output, session)
       updateCheckboxInput(session, NS("mgf", "exclude_reporter_region"), "Exclude reporter region",
                           value = cached_pars()$exclude_reporter_region)
       updateCheckboxInput(session, NS("mgf", "calib_masses"), "Mass calibration", value = cached_pars()$calib_masses)
-      updateNumericInput(session, NS("mgf", "ppm_ms1calib"), "Calibration mass tolerance (ppm)",
+      updateNumericInput(session, NS("mgf", "ppm_ms1calib"), "MS1 Calibration mass tolerance (ppm)",
                          value = cached_pars()$ppm_ms1calib)
+      updateNumericInput(session, NS("mgf", "ppm_ms2calib"), "MS2 Calibration mass tolerance (ppm)",
+                         value = cached_pars()$ppm_ms2calib)
       updateCheckboxInput(session, NS("mgf", "cut_ms2ions"), "Cut MS2 by regions", cached_pars()$cut_ms2ions)
       updateTextInput(session, NS("mgf", "topn_ms2ion_cuts"), "Cuts (m/z = percent)",
                       value = cached_pars()$topn_ms2ion_cuts,

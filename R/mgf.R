@@ -10,21 +10,23 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
     fluidRow(
       column(4, selectInput(NS(id, "quant"), "Quantitation", quant, selected = "none")),
     ) |>
-      bslib::tooltip("Choice 'none' for LFQ."),
+      bslib::tooltip("Choose 'none' for LFQ."),
 
     checkboxInput(NS(id, "use_lfq_intensity"), "Apply LFQ intensity", value = TRUE) |>
-      bslib::tooltip("Apply LFQ precursor intenisty for label-free or TMT);
-                     May leave it checked with TMT data."),
+      bslib::tooltip("For MS1-based LFQ; may also leave it checked with TMT data."),
 
     uiOutput(NS(id, "tmt")),
     fluidRow(
       column(4, shinyFiles::shinyDirButton(NS(id, "select_outpath"), "Output path", "Please select a folder",
-                                           style = "background-color: #f5f5f5")),
-      column(12, textInput(NS(id, "out_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project"))),
+                                           style = "background-color: #f5f5f5") |>
+               bslib::tooltip("Prefer not to nest RAW MS data under the output path")),
+      column(12, textInput(NS(id, "out_path"), label = NULL, # value = "~",
+                           placeholder = "~/Mzion/My_Project/Out")),
       column(4, shinyFiles::shinyDirButton(NS(id, "select_mgfpath"), "Peaklist path", "Please select a folder",
                                            style = "background-color: #f5f5f5") |>
                bslib::tooltip("Thermo's RAW, mzML (no zlib compression) or MGF")),
-      column(12, textInput(NS(id, "mgf_path"), label = NULL, value = "~", placeholder = file.path("~/Mzion/My_Project/mgf"))),
+      column(12, textInput(NS(id, "mgf_path"), label = NULL, # value = "~",
+                           placeholder = "~/Mzion/My_Project/RAWDATA")),
       column(4, shinyFiles::shinyDirButton(NS(id, "select_cachepath"), "Cache folder", "Please select a folder",
                                            style = "background-color: #f5f5f5")),
       column(12, textInput(NS(id, ".path_cache"), label = NULL, value = formals(mzion::matchMS)$.path_cache)),
@@ -42,7 +44,7 @@ mgfUI <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "tmt1
       column(4, numericInput(NS(id, "max_ret_time"), "Max retention time", Inf)),
     ),
     checkboxInput(NS(id, "is_mdda"), "Chimeric precursors", value = TRUE) |>
-      bslib::tooltip("Require RAW format"),
+      bslib::tooltip("Require RAW MS data"),
     conditionalPanel(
       condition = "input.is_mdda == true",
       ns = ns,
@@ -170,9 +172,9 @@ mgfServer <- function(id, quant = c("none", "tmt6", "tmt10", "tmt11", "tmt16", "
 
       observeEvent(input$reset, {
         updateTextInput(session, "out_path", label = NULL, value = "~",
-                        placeholder = file.path("~/Mzion/My_Project"))
+                        placeholder = file.path("~/Mzion/My_Project/Out"))
         updateTextInput(session, "mgf_path", label = NULL, value = "~",
-                        placeholder = "~/Mzion/My_project/mgf")
+                        placeholder = "~/Mzion/My_Project/RAWDATA")
         updateTextInput(session, ".path_cache", NULL,
                         value = formals(mzion::matchMS)$.path_cache)
         updateNumericInput(session, "min_ms1_charge", "Min MS1 charge state", 2)
