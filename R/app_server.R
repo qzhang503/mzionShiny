@@ -609,6 +609,10 @@ app_server <- function(input, output, session)
 
   ## Submit
   btn_submit <- eventReactive(input$submit, {
+    if (!dir.exists(out_path())) {
+      dir.create(file.path(out_path()))
+    }
+
     shinyjs::toggleState("submit")
 
     sink(file.path(out_path(), "mzpars.txt"))
